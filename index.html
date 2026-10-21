@@ -164,7 +164,6 @@ h1,h2,h3,p{margin:0}
     <div class="actions"><button class="btn pri" id="go">分析</button><button class="btn" id="demo">用示例字幕试试</button><span id="msg" class="mut" role="status"></span></div>
   </div>
 </section>
-<div id="aikey" class="hidden" style="margin-top:8px"><button class="btn sm" id="aik">设置 AI 密钥</button> <span id="aikmsg" class="mut"></span></div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script>
@@ -248,28 +247,20 @@ const hl=(sentence,form)=>{
   return m?esc(sentence.slice(0,m.index))+`<span class="hit">${esc(m[0])}</span>`+esc(sentence.slice(m.index+m[0].length)):esc(sentence);
 };
 const sub=(t,s,f)=>`<div class="sub"><span class="tc">${t}</span><span class="line">${hl(s,f)}</span></div>`;
-/* ---------- AI: bring-your-own free Gemini key, stored only in this browser, sent only to Google ---------- */
-const AIBASE="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",AIMODEL="gemini-flash-lite-latest";
-const lsGet=k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}},lsSet=(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}};
-const AISYS="你是英语学习助手。用户正在通过电影字幕学单词。根据电影名、字幕原句，用简体中文回答，格式固定，不要多余内容：\n含义：这个词在这句话里的具体意思（一句话）\n情景：结合电影情节和这句台词，说明角色为什么这样说、当时发生了什么（2-3句；不确定具体情节时只根据台词推断，并说明是推断）\n用法：一个词性/搭配提示，加一个简单的英文例句和中文翻译";
+/* ---------- AI: scene explanation via the Worker (free Cloudflare Workers AI, no visitor key) ---------- */
 async function aiExplain(d){
-  const key=lsGet('ml_ai_key');if(!key)throw new Error('请先点页面底部「设置 AI 密钥」，填入你自己的免费 Gemini key');
-  const r=await fetch(AIBASE,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify({model:AIMODEL,temperature:.4,messages:[{role:'system',content:AISYS},{role:'user',content:`电影：${d.m}${d.y?` (${d.y})`:''}\n单词：${d.w}（台词中的形式：${d.f}）\n时间点：${d.t}\n台词：${d.s}`}]})});
+  if(!API)throw new Error('当前版本未连接 AI 服务');
+  const r=await fetch(API+'/explain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({m:d.m,y:d.y,w:d.w,f:d.f,t:d.t,s:d.s})});
   const j=await r.json().catch(()=>({}));
-  if(!r.ok)throw new Error(r.status==429?'AI 额度用完了（免费额度每天有限），明天再试':(j[0]&&j[0].error&&j[0].error.message)||(j.error&&j.error.message)||('AI 请求失败 '+r.status));
-  return j.choices[0].message.content.trim();
+  if(!r.ok)throw new Error(j.error||('AI 请求失败 '+r.status));
+  return j.text;
 }
 document.addEventListener('click',async e=>{
   const b=e.target.closest('.aibtn');if(!b)return;
   const out=b.nextElementSibling;out.className='aiout on';out.textContent='AI 思考中…';
   try{out.textContent=await aiExplain(b.dataset)}catch(err){out.textContent=err.message}
 });
-$('aik').onclick=()=>{
-  const k=prompt('粘贴你自己的免费 Gemini API key（在 aistudio.google.com 获取）。只保存在这个浏览器里，只发送给 Google。留空则清除。',lsGet('ml_ai_key'));
-  if(k===null)return;lsSet('ml_ai_key',k.trim());$('aikmsg').textContent=k.trim()?'已保存':'已清除';
-};
-const aiBtn=(w,x,m)=>`<button class="btn sm aibtn" data-w="${esc(w.lemma)}" data-f="${esc(x.form)}" data-s="${esc(x.sentence)}" data-t="${esc(x.t)}" data-m="${esc(m?m.title:'')}" data-y="${esc(m&&m.year||'')}">✨ AI 解释情景</button><div class="aiout"></div>`;
-$('aikey').classList.remove('hidden');
+const aiBtn=(w,x,m)=>!API?'':`<button class="btn sm aibtn" data-w="${esc(w.lemma)}" data-f="${esc(x.form)}" data-s="${esc(x.sentence)}" data-t="${esc(x.t)}" data-m="${esc(m?m.title:'')}" data-y="${esc(m&&m.year||'')}">✨ AI 解释情景</button><div class="aiout"></div>`;
 
 function wordCard(w,movie,only){
   const mv=movie||(cur&&!$('detail').classList.contains('hidden')?cur:null);
