@@ -2,295 +2,407 @@
 <html lang="zh">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="看电影前先学单词：按 CEFR 难度分级的字幕词表，带时间码、原句和中文释义。">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="看电影前先学单词：按你的英语水平生成电影生词表，带台词原句、中文释义和发音，用闪卡复习。">
 <title>MovieLingo</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22%2314161c%22/%3E%3Crect%20x%3D%22112%22%20y%3D%22180%22%20width%3D%22150%22%20height%3D%2252%22%20rx%3D%2226%22%20fill%3D%22%23f4f4f1%22/%3E%3Crect%20x%3D%22284%22%20y%3D%22180%22%20width%3D%22116%22%20height%3D%2252%22%20rx%3D%2226%22%20fill%3D%22%23f0a24a%22/%3E%3Crect%20x%3D%22284%22%20y%3D%22246%22%20width%3D%22116%22%20height%3D%2212%22%20rx%3D%226%22%20fill%3D%22%23f0a24a%22/%3E%3Crect%20x%3D%22112%22%20y%3D%22286%22%20width%3D%22228%22%20height%3D%2252%22%20rx%3D%2226%22%20fill%3D%22%23f4f4f1%22/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="MovieLingo">
-<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0e1015" media="(prefers-color-scheme: dark)">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0f12" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap">
 <style>
-
-/* Layout: one centred column; the subtitle strip is the signature element, difficulty runs cool (A1) to warm (C2). */
+/* Design: warm paper background, one amber accent, serif for words and titles, the dark subtitle strip as the signature.
+   Difficulty runs cool (A1) to warm (C2). Green means "mastered", amber means "saved". */
 :root{
-  --bg:#f4f5f7; --surface:#ffffff; --fg:#14161c; --mut:#5f6675; --line:#e0e3ea; --accent:#c9741a; --accent-fg:#ffffff;
-  --sub-bg:#0c0e13; --sub-fg:#f4f4f1; --sub-tc:#f0b35a;
-  --a1:#2f9e72; --a2:#6aa83a; --b1:#c99a14; --b2:#dc7a24; --c1:#cf4638; --c2:#9a3fb4;
+  --bg:#f6f5f1;--surface:#fff;--surface-2:#f1f0eb;--fg:#17181c;--mut:#6c6f77;--faint:#a2a5ac;--line:#e8e6e0;--track:#ebe9e3;
+  --seg-bg:#ebeae5;--seg-on:#fff;
+  --accent:#d9731a;--accent-fg:#fff;--accent-soft:#fbeedf;--ok:#23946a;--ok-soft:#dff2e9;--no:#d2493b;
+  --sub-bg:#121318;--sub-fg:#f3f2ee;--sub-tc:#f2b25c;
+  --a1:#2f9e72;--a2:#6aa83a;--b1:#c99a14;--b2:#dc7a24;--c1:#cf4638;--c2:#9a3fb4;
+  --shadow:0 1px 2px rgb(20 20 30/.04),0 8px 28px rgb(20 20 30/.06);
+  --r:16px;--r-lg:24px;
   --font-body:"Noto Sans SC",system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
   --font-display:"Newsreader",Georgia,"Songti SC","Noto Serif SC",serif;
   --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0e1015; --surface:#171a21; --fg:#eceef2; --mut:#9aa1b0; --line:#262a34; --accent:#f0a24a; --accent-fg:#17110a;
-  --a1:#4cc596; --a2:#8ccc58; --b1:#e6b83a; --b2:#f09a4a; --c1:#ef6a5c; --c2:#c47be0; color-scheme:dark}}
+  --bg:#0e0f12;--surface:#16181d;--surface-2:#1d2026;--fg:#eceef1;--mut:#9298a3;--faint:#5f6570;--line:#25282f;--track:#262930;
+  --seg-bg:#16181d;--seg-on:#2a2e36;
+  --accent:#f0a24a;--accent-fg:#1a1208;--accent-soft:#33261a;--ok:#46c08f;--ok-soft:#16302a;--no:#ef6a5c;
+  --a1:#4cc596;--a2:#8ccc58;--b1:#e6b83a;--b2:#f09a4a;--c1:#ef6a5c;--c2:#c47be0;--shadow:none;color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0e1015; --surface:#171a21; --fg:#eceef2; --mut:#9aa1b0; --line:#262a34; --accent:#f0a24a; --accent-fg:#17110a;
-  --a1:#4cc596; --a2:#8ccc58; --b1:#e6b83a; --b2:#f09a4a; --c1:#ef6a5c; --c2:#c47be0; color-scheme:dark}
+  --bg:#0e0f12;--surface:#16181d;--surface-2:#1d2026;--fg:#eceef1;--mut:#9298a3;--faint:#5f6570;--line:#25282f;--track:#262930;
+  --seg-bg:#16181d;--seg-on:#2a2e36;
+  --accent:#f0a24a;--accent-fg:#1a1208;--accent-soft:#33261a;--ok:#46c08f;--ok-soft:#16302a;--no:#ef6a5c;
+  --a1:#4cc596;--a2:#8ccc58;--b1:#e6b83a;--b2:#f09a4a;--c1:#ef6a5c;--c2:#c47be0;--shadow:none;color-scheme:dark}
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--font-body);
-  padding-block:20px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-main{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
-button,input{font:inherit;color:inherit}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 var(--font-body);-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
 h1,h2,h3,p{margin:0}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .hidden{display:none!important}
-.mut{color:var(--mut)}
+.mut{color:var(--mut)}.small{font-size:13px}.center{text-align:center}
+.i{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.i.fill{fill:currentColor;stroke:none}
+main{max-width:880px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
 
-.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.brand{display:flex;flex-direction:column;gap:2px}
-.brand h1{font:600 30px/1.1 var(--font-display);letter-spacing:-.01em}
-.brand h1 em{font-style:normal;color:var(--accent)}
-.brand span{font-size:13px;color:var(--mut)}
-.tabs{display:flex;gap:4px}
-.tab{border:0;background:none;padding:8px 14px;border-radius:8px;cursor:pointer;color:var(--mut);font-weight:500}
-.tab:hover{color:var(--fg)}
-.tab.on{background:var(--fg);color:var(--bg)}
+/* app bar + navigation: bottom tab bar on phones, pill nav on wider screens */
+.appbar{display:flex;align-items:center;gap:16px;max-width:880px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px 8px}
+.logo{display:flex;align-items:center;gap:10px;font:600 21px/1 var(--font-display);letter-spacing:-.01em}
+.logo em{font-style:normal;color:var(--accent)}
+.logo svg{width:30px;height:30px;border-radius:8px;display:block}
+.dnav{display:none;margin-left:auto;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px;gap:2px}
+.dnav a{display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:99px;color:var(--mut);font-weight:500;font-size:14px}
+.dnav a:hover{color:var(--fg)}
+.dnav a[aria-current]{background:var(--fg);color:var(--bg)}
+.abr{margin-left:auto;display:flex;align-items:center;gap:6px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(3,1fr);background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:saturate(1.5) blur(16px);backdrop-filter:saturate(1.5) blur(16px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11px;color:var(--faint);font-weight:500}
+.tabbar a[aria-current]{color:var(--accent)}
+@media (min-width:760px){.dnav{display:flex}.abr{margin-left:0}.tabbar{display:none}body{padding-bottom:56px}}
+.offline{font:500 11px var(--font-mono);color:var(--b2);border:1px solid currentColor;border-radius:99px;padding:3px 9px;white-space:nowrap}
 
-.btn{border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:8px;cursor:pointer;font-weight:500}
-.btn:hover{border-color:var(--mut)}
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:12px;cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap;transition:transform .12s,border-color .15s,filter .15s}
+.btn:hover{border-color:var(--faint)}
+.btn:active{transform:scale(.97)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.btn.sm{padding:5px 12px;font-size:13px}
-.btn.danger:hover{border-color:var(--c1);color:var(--c1)}
-.field{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:44px}
-.field::placeholder{color:var(--mut)}
-.search{display:flex;align-items:center;gap:10px}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.lg{padding:13px 22px;font-size:15px;border-radius:14px}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.ib{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;border:0;background:none;color:var(--mut);cursor:pointer;flex:none;padding:0;transition:background .15s,color .15s,transform .12s}
+.ib:hover{background:var(--surface-2);color:var(--fg)}
+.ib:active{transform:scale(.92)}
+.linkbtn{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--accent);cursor:pointer;font-weight:500;font-size:14px;padding:4px;white-space:nowrap}
+.field{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-height:46px;outline:none;font-size:16px}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field::placeholder,.sbox input::placeholder{color:var(--faint)}
+.sbox{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px;min-height:52px;box-shadow:var(--shadow);cursor:text}
+.sbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sbox .i{color:var(--faint)}
+.sbox input{flex:1;border:0;background:none;outline:none;min-width:0;font-size:16px;padding:12px 0}
+.seg{display:flex;background:var(--seg-bg);border-radius:12px;padding:3px;gap:2px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:1;border:0;background:none;padding:7px 12px;border-radius:9px;cursor:pointer;color:var(--mut);font-size:13.5px;font-weight:500;white-space:nowrap;transition:background .15s,color .15s}
+.seg button[aria-pressed=true]{background:var(--seg-on);color:var(--fg);box-shadow:0 1px 3px rgb(0 0 0/.08)}
+.seg b{font:500 11.5px var(--font-mono);margin-left:5px;opacity:.65}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.ptitle{font:600 32px/1.15 var(--font-display);letter-spacing:-.015em;margin:14px 0 18px}
+.sechead{display:flex;align-items:center;justify-content:space-between;margin:32px 0 14px}
+.sechead h2{font:600 21px var(--font-display)}
+.note{font-size:12px;color:var(--faint);text-align:center;margin:40px 0 8px}
+.spin,.busy::before{content:"";display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
+.busy::before{margin-right:8px;width:11px;height:11px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--mut);padding:120px 0}
 
-/* difficulty colours */
+/* difficulty */
 .lv-a1{--lv:var(--a1)}.lv-a2{--lv:var(--a2)}.lv-b1{--lv:var(--b1)}.lv-b2{--lv:var(--b2)}.lv-c1{--lv:var(--c1)}.lv-c2{--lv:var(--c2)}
-.pill{display:inline-block;font:500 12px/1 var(--font-mono);padding:4px 8px;border-radius:6px;color:var(--lv);background:color-mix(in srgb,var(--lv) 15%,transparent)}
-.tag{display:inline-block;font-size:12px;line-height:1;padding:4px 8px;border-radius:6px;color:var(--mut);border:1px solid var(--line)}
-.lvbar{display:flex;gap:2px;height:6px;border-radius:99px;overflow:hidden;background:var(--line)}
+.pill{display:inline-block;font:600 11px/1 var(--font-mono);padding:4px 7px;border-radius:6px;color:var(--lv);background:color-mix(in srgb,var(--lv) 14%,transparent)}
+.tag{display:inline-block;font-size:11.5px;line-height:1;padding:4px 7px;border-radius:6px;color:var(--mut);background:var(--surface-2)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:99px;cursor:pointer;font-size:13.5px;white-space:nowrap;transition:border-color .15s,background .15s}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lv,var(--faint))}
+.chip b{font:500 12px var(--font-mono);color:var(--mut)}
+.chip[aria-pressed=true]{border-color:var(--lv);background:color-mix(in srgb,var(--lv) 13%,var(--surface))}
+.chip[aria-pressed=true] b{color:var(--fg)}
+.lvbar{display:flex;gap:2px;height:5px;border-radius:99px;overflow:hidden;background:var(--track)}
 .lvbar i{background:var(--lv);min-width:3px}
 
-/* movie list */
-.movies{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
-.movie{display:flex;gap:14px;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;text-align:left;width:100%}
-.movie:hover{border-color:var(--accent)}
-.poster{width:56px;height:84px;object-fit:cover;border-radius:6px;background:var(--line);flex:none}
-.poster.blank{display:grid;place-items:center;font:600 22px var(--font-display);color:var(--mut)}
-.mbody{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
-.mtitle{font:600 19px/1.25 var(--font-display);overflow-wrap:anywhere}
-.mmeta{font-size:13px;color:var(--mut)}
-.section-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:500;margin-top:12px}
-.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:28px 20px;text-align:center;color:var(--mut)}
-.empty b{display:block;color:var(--fg);font:600 18px var(--font-display);margin-bottom:4px}
-.tools{display:flex;gap:8px;flex-wrap:wrap}
+/* progress ring: conic gradient with a transparent hole, so it sits on any background */
+.ring{--p:0;--sz:64px;--th:6px;width:var(--sz);height:var(--sz);position:relative;display:grid;place-items:center;flex:none}
+.ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--ok) calc(var(--p)*360deg),var(--track) 0);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--th)),#000 calc(100% - var(--th) + .5px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--th)),#000 calc(100% - var(--th) + .5px))}
+.ring span{position:relative;font:600 15px var(--font-mono);line-height:1}
+.ring small{display:block;font:500 10px var(--font-mono);color:var(--mut);text-align:center;margin-top:2px}
+
+/* home */
+.today{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:18px 20px;margin-top:10px}
+.today h2{font:600 21px var(--font-display);margin-bottom:2px}
+.today p{font-size:13.5px;color:var(--mut)}
+.today .fl{color:var(--accent);font-weight:600}
+.today .fl .i{display:inline-block;vertical-align:-3px;margin-right:2px}
+@media (max-width:540px){.today{grid-template-columns:auto 1fr}.today .btn{grid-column:1/-1}}
+.posters{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:22px 14px}
+@media (max-width:440px){.posters{grid-template-columns:1fr 1fr}}
+.pcard{display:flex;flex-direction:column;gap:5px;text-align:left;border:0;background:none;padding:0;cursor:pointer;min-width:0;color:inherit}
+.cover{aspect-ratio:2/3;border-radius:14px;overflow:hidden;background:var(--surface-2);box-shadow:var(--shadow);position:relative;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.pcard:hover .cover{transform:translateY(-4px);box-shadow:0 14px 34px rgb(0 0 0/.16)}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.gen{width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:14px;background:linear-gradient(155deg,hsl(var(--h) 42% 42%),hsl(calc(var(--h) + 40) 48% 15%));color:#fff;font:600 20px/1.12 var(--font-display);overflow-wrap:anywhere}
+.gen small{font:500 11px var(--font-mono);opacity:.7;margin-bottom:6px;letter-spacing:.08em}
+.pcard.loading .cover::after{content:"获取字幕中…";position:absolute;inset:0;display:grid;place-items:center;background:rgb(0 0 0/.6);color:#fff;font-size:13px}
+.pb{height:3px;border-radius:99px;background:var(--track);overflow:hidden;margin-top:5px}
+.pb i{display:block;height:100%;background:var(--ok)}
+.pt{font-weight:600;font-size:14.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm{font-size:12.5px;color:var(--mut)}
+
+/* first run */
+.welcome{display:flex;flex-direction:column;gap:22px;padding:18px 0 8px}
+.welcome h1{font:600 clamp(32px,8vw,48px)/1.1 var(--font-display);letter-spacing:-.02em}
+.welcome h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:16px;color:var(--mut);max-width:32em}
+.demo{position:relative;padding-bottom:34px;max-width:520px}
+.demo .pop{position:absolute;right:6%;bottom:0;transform:rotate(-2.5deg);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 30px rgb(0 0 0/.14);padding:10px 14px;display:flex;gap:10px;align-items:center;font-size:14px}
+.demo .pop b{font:600 18px var(--font-display)}
+.lvpick{display:flex;flex-direction:column;gap:10px}
+.lvpick > p:first-child{font-weight:600}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
 /* movie detail */
-.dhead{display:flex;flex-direction:column;gap:14px}
-.dtop{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between}
-.dtitle{display:flex;gap:16px;align-items:flex-end}
-.dtitle .poster{width:76px;height:114px}
-.dtitle h2{font:600 32px/1.12 var(--font-display);overflow-wrap:anywhere;text-wrap:balance}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:99px;cursor:pointer;font-size:14px}
-.chip::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--lv)}
-.chip b{font:500 13px var(--font-mono)}
-.chip.on{border-color:var(--lv);background:color-mix(in srgb,var(--lv) 14%,var(--surface))}
-.chip[aria-pressed=false] b{color:var(--mut)}
-.words{display:flex;flex-direction:column;gap:12px}
+.mhero{position:relative;margin:0 -16px;padding:0 16px 20px;overflow:hidden;isolation:isolate}
+.mbg{position:absolute;inset:-60px;z-index:-2;filter:blur(46px) saturate(1.3);opacity:.4}
+.mhero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(to bottom,transparent,var(--bg) 92%)}
+@media (min-width:760px){.mhero{margin:6px 0 0;border-radius:28px;padding:10px 24px 24px}}
+.mtop{display:flex;justify-content:space-between;align-items:center;margin:4px -6px 10px}
+.glass{background:color-mix(in srgb,var(--surface) 65%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.mhead{display:flex;gap:18px;align-items:flex-end}
+.mhead .cover{width:100px;flex:none;border-radius:12px}
+.mhead .gen{font-size:15px;padding:10px}
+@media (min-width:760px){.mhead .cover{width:124px}}
+.minfo{min-width:0;flex:1;display:flex;flex-direction:column;gap:8px;padding-bottom:4px}
+.minfo h1{font:600 clamp(26px,6.5vw,38px)/1.08 var(--font-display);letter-spacing:-.015em;overflow-wrap:anywhere}
+.mprog{display:flex;align-items:center;gap:14px;margin:20px 0 16px}
+.mprog b{display:block;font-weight:600;font-size:16px}
+.mprog span{font-size:13px;color:var(--mut)}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:16px;padding:16px;background:var(--accent);color:var(--accent-fg);font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 8px 24px color-mix(in srgb,var(--accent) 32%,transparent);transition:transform .12s,filter .15s}
+.cta:hover{filter:brightness(1.06)}.cta:active{transform:scale(.98)}
+.cta span{font-weight:500;opacity:.8}
+.cta:disabled{background:var(--surface-2);color:var(--mut);box-shadow:none;cursor:default}
+.menu{position:relative}
+.menu summary{list-style:none}.menu summary::-webkit-details-marker{display:none}
+.pop2{position:absolute;right:0;top:46px;z-index:20;min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgb(0 0 0/.18);padding:6px;display:flex;flex-direction:column}
+.pop2 button{display:flex;align-items:center;gap:10px;border:0;background:none;padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left;font-size:14px}
+.pop2 button:hover{background:var(--surface-2)}
+.pop2 .danger{color:var(--no)}
+.fbar{position:sticky;top:0;z-index:5;margin:0 -16px;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;flex-direction:column;gap:10px}
+.frow{display:flex;align-items:center;gap:2px}
+.frow .seg{flex:1;min-width:0}
+.sortsel{border:0;background:none;color:var(--mut);font-size:13px;cursor:pointer;padding:6px 0;flex:none}
+#lv{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-16px;padding:2px 8px 2px 16px;gap:6px;-webkit-mask:linear-gradient(to right,transparent,#000 16px,#000 calc(100% - 20px),transparent);mask:linear-gradient(to right,transparent,#000 16px,#000 calc(100% - 20px),transparent)}
+#lv::-webkit-scrollbar{display:none}
+#lv>*{flex:none}
+#lv .chip{padding:5px 11px;font-size:13px}
 
-/* word card */
-.word{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;border-left:4px solid var(--lv)}
-.wh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.lemma{font:600 26px/1.2 var(--font-display);overflow-wrap:anywhere}
+/* word list: compact rows that open in place */
+.wlist{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.wlist:has(>.empty){background:none;border:0;box-shadow:none}
+.wrow{display:grid;grid-template-columns:1fr auto auto;align-items:center;border-top:1px solid var(--line);padding-right:6px;transition:background .15s}
+.wrow:first-child{border-top:0}
+.wrow.open{background:var(--surface-2)}
+.wrow.gone{opacity:0;transition:height .26s ease,opacity .18s;overflow:hidden}
+.wmain{display:flex;align-items:baseline;gap:12px;padding:14px 6px 14px 16px;background:none;border:0;text-align:left;cursor:pointer;min-width:0}
+.lvt{font:600 10.5px var(--font-mono);color:var(--lv);width:20px;flex:none}
+.ww{font:600 19px/1.25 var(--font-display);flex:none;max-width:60%;overflow:hidden;text-overflow:ellipsis}
+.wz{color:var(--mut);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.st-k .ww{color:var(--mut)}
+.wrow .ib{width:38px;height:38px;color:var(--faint)}
+.mk.star[aria-pressed=true]{color:var(--accent)}
+.mk.star[aria-pressed=true] .i{fill:currentColor}
+.mk.ok[aria-pressed=true]{color:var(--ok);background:var(--ok-soft)}
+.wd{grid-column:1/-1;padding:0 16px 16px 48px;display:flex;flex-direction:column;gap:9px;animation:fadein .2s ease}
+@media (max-width:480px){.wd{padding-left:16px}}
+@keyframes fadein{from{opacity:0;transform:translateY(-4px)}}
+.wdh{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .cnt{margin-left:auto;font:400 12px var(--font-mono);color:var(--mut)}
-.zh{font-size:17px;font-weight:700}
+.zh{font-size:16px;font-weight:600}
 .en{font-size:14px;color:var(--mut)}
-.src{font-size:13px;color:var(--mut)}
-
-/* subtitle strip, the signature element */
-.subs{display:flex;flex-direction:column;gap:6px;margin-top:4px}
-.sub{display:flex;gap:12px;align-items:baseline;background:var(--sub-bg);color:var(--sub-fg);padding:8px 12px;border-radius:6px;font-size:14px;line-height:1.5}
-.tc{font:400 12px var(--font-mono);color:var(--sub-tc);flex:none;font-variant-numeric:tabular-nums}
-.line{min-width:0;overflow-wrap:anywhere}
-.hit{color:var(--sub-tc);font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
-
-/* add form */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}
-.panel h2{font:600 22px var(--font-display)}
-.grid2{display:grid;grid-template-columns:1fr 140px;gap:10px}
-@media (max-width:480px){.grid2{grid-template-columns:1fr}.dtitle h2{font-size:26px}}
-.drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:1.5px dashed var(--line);border-radius:10px;padding:22px 16px;text-align:center;cursor:pointer;color:var(--mut)}
-.drop:hover,.drop:focus-within{border-color:var(--accent)}
-.drop b{color:var(--fg);overflow-wrap:anywhere}
-.drop input{position:absolute;width:1px;height:1px;opacity:0}
-.aibtn{align-self:flex-start}
-.aiout{display:none;white-space:pre-wrap;font-size:14px;line-height:1.7;background:color-mix(in srgb,var(--accent) 10%,var(--surface));border-left:3px solid var(--accent);border-radius:6px;padding:10px 14px}
-.aiout.on{display:block}
-.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-@media (prefers-reduced-motion:no-preference){.movie,.chip,.btn,.tab{transition:border-color .15s,background .15s,color .15s}}
-
-</style>
-<style>
-/* static-site additions: marks, filters, flashcards */
-a.movie{color:inherit;text-decoration:none}
-.navr{display:flex;align-items:center;gap:6px}
-.iconbtn{border:1px solid var(--line);background:var(--surface);width:38px;height:38px;border-radius:8px;cursor:pointer;display:grid;place-items:center;font-size:16px;flex:none;padding:0}
-.iconbtn:hover{border-color:var(--mut)}
-.sech{font:600 20px/1.2 var(--font-display)}
-.sech .mut{font:400 14px var(--font-mono)}
-.lhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-.foot{margin-top:18px;align-items:center}
-.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:4px 6px;font-size:13px}
-.note{font-size:12px;color:var(--mut);text-align:center}
-kbd{font:500 11px var(--font-mono);border:1px solid currentColor;border-radius:4px;padding:0 5px;opacity:.55;margin-left:8px}
-@media (hover:none){kbd{display:none}}
-.busy::before{content:"";display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-1px;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* first-run */
-.hero{grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;gap:18px}
-.hero h2{font:600 28px/1.2 var(--font-display);text-wrap:balance}
-.steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px;counter-reset:s}
-.steps li{counter-increment:s;padding:14px;border-radius:12px;background:var(--bg);font-size:14px;color:var(--mut);display:flex;flex-direction:column;gap:2px}
-.steps li::before{content:counter(s,decimal-leading-zero);font:500 12px var(--font-mono);color:var(--accent)}
-.steps b{color:var(--fg);font-size:15px}
-
-/* detail */
-.dtitle{align-items:center}
-.prog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut);margin-top:8px;flex-wrap:wrap}
-.pbar{flex:0 1 200px;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
-.pbar i{display:block;height:100%;background:var(--a1);transition:width .3s}
-.prog b{color:var(--fg);font:500 13px var(--font-mono)}
-.dact{display:flex;gap:8px;flex-wrap:wrap}
-.btn:disabled{opacity:.45;cursor:default}
-.btn b{font:500 13px var(--font-mono);margin-left:4px}
-.fbar{position:sticky;top:0;z-index:5;margin:0 -16px;padding:10px 16px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
-.frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.frow .field{flex:1 1 180px;min-height:40px;padding:7px 12px;width:auto}
-select.field{flex:0 0 auto;cursor:pointer}
-.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;max-width:100%;overflow-x:auto;scrollbar-width:none}
-.seg button{border:0;background:none;padding:5px 12px;border-radius:7px;cursor:pointer;color:var(--mut);font-size:14px;white-space:nowrap}
-.seg button:hover{color:var(--fg)}
-.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
-.seg b{font:500 12px var(--font-mono);margin-left:5px;opacity:.75}
-.wcount{font-size:13px;color:var(--mut);margin-left:auto}
-@media (max-width:600px){.frow{flex-wrap:nowrap}.frow .field{flex-basis:0;min-width:0}.wcount,.aibtn .lbl{display:none}#lv{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}#lv .chip{flex:none}}
-
-/* word card */
-.word{transition:opacity .15s}
-.word.st-k{opacity:.5}
-.word.st-k:hover,.word.st-k:focus-within{opacity:1}
-.word.st-s{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 50%,transparent)}
+.occ,.more{display:flex;flex-direction:column;gap:6px}
+.moretg{align-self:flex-start;padding-left:0;font-size:13px}
 .say{border:0;background:none;color:var(--mut);width:32px;height:32px;border-radius:50%;display:inline-grid;place-items:center;cursor:pointer;flex:none;padding:0}
 .say:hover{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
-.occ,.more{display:flex;flex-direction:column;gap:6px}
-.subact{margin-left:auto;display:flex;gap:2px;align-items:center;flex:none;align-self:center}
-.sub .say{width:28px;height:28px;color:color-mix(in srgb,var(--sub-fg) 60%,transparent)}
-.sub .aibtn{border:0;background:none;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:99px;white-space:nowrap;color:color-mix(in srgb,var(--sub-fg) 60%,transparent)}
-.sub .say:hover,.sub .aibtn:hover{color:var(--sub-tc);background:rgb(255 255 255 / .08)}
+.sentinel{margin:14px auto}
+
+/* subtitle strip, the signature element */
+.sub{display:flex;gap:12px;align-items:baseline;background:var(--sub-bg);color:var(--sub-fg);padding:9px 6px 9px 12px;border-radius:10px;font-size:14px;line-height:1.5;text-align:left}
+.tc{font:400 11.5px var(--font-mono);color:var(--sub-tc);flex:none;font-variant-numeric:tabular-nums}
+.line{min-width:0;overflow-wrap:anywhere;flex:1}
+.hit{color:var(--sub-tc);font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .from{color:color-mix(in srgb,var(--sub-fg) 55%,transparent);font-size:12px;margin-right:6px;white-space:nowrap}
-.moretg{align-self:flex-start;padding-left:0}
-.wact{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
-.mk{border:1px solid var(--line);background:none;border-radius:99px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--mut)}
-.mk:hover{color:var(--fg);border-color:var(--mut)}
-.mk.k[aria-pressed=true]{color:var(--a1);border-color:var(--a1);background:color-mix(in srgb,var(--a1) 12%,transparent)}
-.mk.s[aria-pressed=true]{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
-.sentinel{align-self:center}
-.sugg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}
+.subact{display:flex;gap:2px;align-items:center;flex:none;align-self:center}
+.sub .say{width:28px;height:28px;color:color-mix(in srgb,var(--sub-fg) 60%,transparent)}
+.aibtn{border:0;background:none;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:99px;white-space:nowrap;color:color-mix(in srgb,var(--sub-fg) 60%,transparent)}
+.sub .say:hover,.aibtn:hover{color:var(--sub-tc);background:rgb(255 255 255/.08)}
+@media (max-width:600px){.aibtn .lbl{display:none}}
+.aiout{display:none;white-space:pre-wrap;font-size:13.5px;line-height:1.7;background:var(--accent-soft);border-radius:10px;padding:10px 14px}
+.aiout.on{display:block}
+
+/* words tab */
+.bookhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:28px 0 14px}
+.bookhead h2{font:600 22px var(--font-display)}
+.bookhead .actions{gap:4px}
+.lemhint{margin:16px 0 4px;color:var(--mut);font-size:14px}
+.lemhint b{color:var(--fg)}
+.sugg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0 16px;font-size:13px}
 .sugg .chip{font-size:13px;padding:4px 10px}
-.whead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;min-height:0}
-.whead:empty{display:none}
-.wsub{display:flex;flex-direction:column;gap:8px;width:100%}
-.drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.empty{padding:48px 20px;text-align:center;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:6px}
+.empty .em{font-size:42px;line-height:1;margin-bottom:8px}
+.empty b{color:var(--fg);font:600 19px var(--font-display)}
+.empty p{max-width:24em;font-size:14px}
 
-/* app shell: offline badge, update toast */
-.offline{margin-left:8px;font:500 11px var(--font-mono);color:var(--b2);border:1px solid currentColor;border-radius:99px;padding:3px 9px;white-space:nowrap}
-.toast{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:12px;background:var(--fg);color:var(--bg);padding:10px 10px 10px 16px;border-radius:12px;font-size:14px;box-shadow:0 8px 30px rgb(0 0 0 / .25);width:max-content;max-width:calc(100vw - 32px)}
-.toast .btn{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);white-space:nowrap}
-.toast .x{border:0;background:none;color:inherit;opacity:.6;cursor:pointer;font-size:18px;padding:0 4px}
+/* add */
+.or{display:flex;align-items:center;gap:12px;color:var(--faint);font-size:13px;margin:32px 0 14px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+#sres{margin-top:18px}
+.upload{padding:8px;display:flex;flex-direction:column;gap:12px}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;border:1.5px dashed var(--line);border-radius:18px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.drop .i{color:var(--accent);margin-bottom:4px}
+.drop b{font-weight:600;overflow-wrap:anywhere}
+.drop:hover,.drop:focus-within,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.upf{display:flex;flex-direction:column;gap:10px;padding:0 8px 8px}
+.grid2{display:grid;grid-template-columns:1fr 110px;gap:10px}
 
-/* flashcards */
-dialog.fc{border:0;padding:0;background:transparent;width:min(560px,calc(100vw - 24px));max-width:none;color:var(--fg)}
-dialog.fc::backdrop{background:rgb(6 7 10 / .6);backdrop-filter:blur(3px)}
-.fcin{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
-.fchead{display:flex;align-items:center;justify-content:space-between;font:500 13px var(--font-mono);color:var(--mut)}
-.fcbar{height:4px;background:var(--line);border-radius:99px;overflow:hidden}
-.fcbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
-.fccard{min-height:230px;justify-content:center}
-.fccard .lemma{font-size:42px}
-.fcans{display:flex;flex-direction:column;gap:6px;padding-top:4px}
-.fcreveal{align-self:center;margin-top:6px}
-.fcgrade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fcgrade .btn{padding:12px}
-.fcdone{text-align:center;padding:24px 8px;display:flex;flex-direction:column;gap:10px}
-.fcdone b{font:600 24px var(--font-display)}
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:6px;background:var(--fg);color:var(--bg);padding:8px 8px 8px 16px;border-radius:14px;font-size:14px;box-shadow:0 10px 30px rgb(0 0 0/.25);width:max-content;max-width:calc(100vw - 32px);animation:toastin .25s cubic-bezier(.2,.8,.2,1)}
+@media (min-width:760px){.toast{bottom:28px}}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,12px)}}
+.tbtn{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:6px 10px;border-radius:8px;white-space:nowrap}
+.toast .x{border:0;background:none;color:inherit;opacity:.55;cursor:pointer;font-size:18px;padding:0 6px}
+
+/* study session */
+dialog{color:var(--fg)}
+.study{border:0;padding:0;margin:0;width:100%;max-width:100%;height:100%;max-height:100%;background:var(--bg)}
+.study[open]{display:flex;flex-direction:column}
+.study::backdrop{background:rgb(0 0 0/.55)}
+@media (min-width:760px){.study{width:min(560px,calc(100vw - 48px));height:min(780px,calc(100vh - 48px));margin:auto;border-radius:28px;border:1px solid var(--line)}}
+.shead{display:flex;align-items:center;gap:10px;padding:max(12px,env(safe-area-inset-top)) 12px 0}
+.sprog{flex:1;height:8px;border-radius:99px;background:var(--track);overflow:hidden}
+.sprog i{display:block;height:100%;width:0;background:var(--ok);border-radius:99px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+#sn{font:500 13px var(--font-mono);color:var(--mut);min-width:48px;text-align:right;padding-right:6px}
+.stage{flex:1;display:grid;place-items:center;padding:20px;overflow:hidden}
+.swipe{width:100%;max-width:440px;position:relative;touch-action:pan-y;cursor:grab;perspective:1400px;animation:cardin .32s cubic-bezier(.2,.8,.2,1);user-select:none;-webkit-user-select:none}
+@keyframes cardin{from{opacity:0;transform:translateY(18px) scale(.96)}}
+.card3d{display:grid;transition:transform .5s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.card3d.flipped{transform:rotateY(180deg)}
+.face{grid-area:1/1;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:28px;box-shadow:0 14px 44px rgb(0 0 0/.09);padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:min(56vh,440px);text-align:center}
+.face.back{transform:rotateY(180deg)}
+.sword{font:600 clamp(42px,12vw,60px)/1.05 var(--font-display);letter-spacing:-.015em;overflow-wrap:anywhere}
+.face .sub{width:100%}
+.hint{font-size:13px;color:var(--faint);margin-top:4px}
+.bw{display:flex;align-items:center;gap:6px}
+.bw b{font:600 26px var(--font-display)}
+.szh{font-size:22px;font-weight:700;line-height:1.45}
+.sen{font-size:14px;color:var(--mut);max-width:30em}
+.stamp{position:absolute;top:24px;z-index:2;padding:4px 12px;border:2.5px solid;border-radius:10px;font-weight:700;font-size:18px;opacity:0;transition:opacity .12s;pointer-events:none;background:var(--surface)}
+.stamp.yes{left:22px;color:var(--ok);transform:rotate(-10deg)}
+.stamp.no{right:22px;color:var(--no);transform:rotate(10deg)}
+.swipe[data-dir=yes] .stamp.yes,.swipe[data-dir=no] .stamp.no{opacity:1}
+.sact{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 10px;max-width:480px;width:100%;margin:0 auto}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:18px;font-weight:600;font-size:16px;cursor:pointer;border:1.5px solid;transition:transform .12s}
+.gbtn:active{transform:scale(.96)}
+.gbtn.no{background:var(--surface);border-color:var(--line);color:var(--no)}
+.gbtn.yes{background:var(--ok);border-color:var(--ok);color:#fff}
+.keys{text-align:center;font-size:12px;color:var(--faint);padding:0 0 max(14px,env(safe-area-inset-bottom))}
+@media (hover:none){.keys{display:none}.sact{padding-bottom:max(22px,env(safe-area-inset-bottom))}}
+.done{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;max-width:360px}
+.donebadge{width:88px;height:88px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;animation:pop .55s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+.done h2{font:600 30px var(--font-display);margin-top:6px}
+.done .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin:8px 0}
+.done .stats div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.done .stats b{display:block;font:600 26px var(--font-mono)}
+.done .stats span{font-size:13px;color:var(--mut)}
+.done .actions{justify-content:center;margin-top:8px}
+
+/* settings sheet */
+.sheet{border:0;padding:0;background:var(--surface);width:100%;max-width:520px;margin:auto auto 0;border-radius:24px 24px 0 0;max-height:92vh}
+.sheet[open]{animation:sheetin .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheetin{from{transform:translateY(40px);opacity:0}}
+@media (min-width:760px){.sheet{margin:auto;border-radius:24px}}
+.sheet::backdrop{background:rgb(0 0 0/.45)}
+.sheetin{padding:18px 20px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sheethead h2{font:600 24px var(--font-display)}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+.srow.col{flex-direction:column;align-items:stretch;gap:10px}
+.srow .seg{flex:none}
+.srow p{margin-top:2px}
+.switch{width:50px;height:30px;border-radius:99px;border:0;background:var(--track);position:relative;cursor:pointer;flex:none;transition:background .2s}
+.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.25);transition:transform .2s}
+.switch[aria-checked=true]{background:var(--ok)}
+.switch[aria-checked=true] i{transform:translateX(20px)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-<header class="top">
-  <div class="brand"><h1>Movie<em>Lingo</em></h1><span>看电影前先学单词<b id="offline" class="offline hidden" title="没有网络：已添加的电影、查词和复习照常可用">离线</b></span></div>
-  <div class="navr">
-    <nav class="tabs" aria-label="主导航">
-      <button id="tm" class="tab on">电影</button><button id="tw" class="tab">查词 · 生词本</button><button id="ta" class="tab">添加电影</button>
-    </nav>
-    <button id="theme" class="iconbtn" type="button"></button>
-  </div>
+<header class="appbar">
+  <a class="logo" href="#" aria-label="MovieLingo 首页"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#14161c"/><rect x="112" y="180" width="150" height="52" rx="26" fill="#f4f4f1"/><rect x="284" y="180" width="116" height="52" rx="26" fill="#f0a24a"/><rect x="284" y="246" width="116" height="12" rx="6" fill="#f0a24a"/><rect x="112" y="286" width="228" height="52" rx="26" fill="#f4f4f1"/></svg><span>Movie<em>Lingo</em></span></a>
+  <nav class="dnav" id="dnav" aria-label="主导航"></nav>
+  <div class="abr"><b id="offline" class="offline hidden" title="没有网络：已添加的电影、查词和复习照常可用">离线</b><button class="ib" id="setb" aria-label="设置" title="设置"></button></div>
 </header>
 
-<section id="vm" aria-label="电影">
-  <div id="listwrap">
-    <div class="lhead" id="lhead"><h2 class="sech">我的电影 <span class="mut" id="lcount"></span></h2><button class="btn sm pri" data-go="add">＋ 添加电影</button></div>
-    <div id="list" class="movies"></div>
-    <div class="tools foot" id="lfoot"><button class="btn sm" id="exp">导出词库</button><button class="btn sm" id="imp">导入词库</button><input id="impf" type="file" accept=".json" class="hidden"><button class="btn sm hidden" id="inst">📲 安装到桌面</button><span id="iomsg" class="mut" role="status"></span></div>
-  </div>
-  <div id="detail" class="dhead hidden">
-    <div class="dtop"><button class="btn sm" data-go="">← 我的电影</button><button id="del" class="btn sm danger">删除</button></div>
-    <div class="dtitle"><div id="mposter"></div><div><h2 id="mt"></h2><p id="msub" class="mut"></p><div id="prog" class="prog"></div></div></div>
-    <div id="mbar"></div>
-    <div class="dact"><button class="btn pri" id="fcgo">▶ 闪卡复习</button><button class="btn" id="csv">导出 CSV</button></div>
-    <div class="fbar">
-      <div class="frow">
-        <input id="dq" class="field" type="search" placeholder="在这部电影里找词或中文…" aria-label="在这部电影里找词">
-        <select id="sort" class="field" aria-label="排序"><option value="level">按难度</option><option value="count">按出现次数</option><option value="time">按出场顺序</option></select>
-      </div>
-      <div class="frow"><div id="seg" class="seg" role="group" aria-label="按掌握程度筛选"></div><span id="wcount" class="wcount"></span></div>
-      <div id="lv" class="chips" role="group" aria-label="按等级筛选"></div>
+<main>
+<section id="vh"><div id="home"><div class="loading"><span class="spin"></span>正在加载词库…</div></div></section>
+
+<section id="vd" class="hidden" aria-label="电影词表">
+  <div class="mhero">
+    <div class="mbg" id="mbg"></div>
+    <div class="mtop">
+      <a class="ib glass" href="#" aria-label="返回" id="backb"></a>
+      <details class="menu" id="menu"><summary class="ib glass" aria-label="更多操作" id="moreb"></summary>
+        <div class="pop2"><button id="csv"></button><button id="del" class="danger"></button></div></details>
     </div>
-    <div id="words" class="words"></div>
+    <div class="mhead"><div class="cover" id="mcover"></div><div class="minfo"><h1 id="mt"></h1><p id="msub" class="mut small"></p><div id="mbar"></div></div></div>
+    <div class="mprog"><div id="mring"></div><div><b id="mpct"></b><span id="mstat"></span></div></div>
+    <button class="cta" id="learn"></button>
   </div>
+  <div class="fbar">
+    <div id="seg" class="seg" role="group" aria-label="按掌握程度筛选"></div>
+    <div class="frow"><div id="lv" class="chips" role="group" aria-label="按等级筛选"></div><button class="ib" id="dqb" aria-label="搜索这部电影的单词"></button>
+      <select id="sort" class="sortsel" aria-label="排序"><option value="level">按难度</option><option value="count">按次数</option><option value="time">按出场</option></select></div>
+    <div class="frow hidden" id="dqrow"><input id="dq" class="field" type="search" placeholder="搜索单词或中文" aria-label="搜索这部电影的单词" autocomplete="off"></div>
+  </div>
+  <div id="words" class="wlist"></div>
 </section>
 
-<section id="vw" class="hidden" aria-label="查词与生词本">
-  <div class="search"><input id="wq" class="field" type="search" placeholder="查单词，如 reckless、fell（自动还原原形）" aria-label="查单词" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-  <div id="whead" class="whead"></div>
-  <div id="wres" class="words" style="margin-top:14px"></div>
+<section id="vw" class="hidden" aria-label="单词">
+  <h1 class="ptitle">单词</h1>
+  <label class="sbox" id="wqbox"><input id="wq" type="search" placeholder="查单词，如 reckless、fell" aria-label="查单词" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+  <div id="whead"></div>
+  <div id="wres" class="wlist"></div>
+  <div id="sugg" class="sugg"></div>
 </section>
 
 <section id="va" class="hidden" aria-label="添加电影">
-  <div class="panel">
-    <div><h2>添加电影</h2><p class="mut">搜索电影自动获取英文字幕，或上传自己的字幕文件。词表在你的浏览器里生成，字幕不会上传。</p></div>
-    <div id="online" class="hidden">
-      <input id="sq" class="field" type="search" placeholder="搜索电影，如 Inception" aria-label="搜索电影">
-      <div id="sres" class="movies" style="margin-top:10px"></div>
-      <p id="smsg" class="mut" role="status" style="margin-top:8px"></p>
-      <div class="section-label">或者手动上传</div>
-    </div>
-    <label class="drop" for="af"><span>点击选择，或把字幕文件拖到这里</span><b id="fname">.srt / .vtt</b><input id="af" type="file" accept=".srt,.vtt,.txt"></label>
-    <div class="grid2">
-      <input id="at" class="field" type="text" placeholder="电影名（选文件后自动填）" aria-label="电影名">
-      <input id="ay" class="field" type="text" inputmode="numeric" placeholder="年份（可选）" aria-label="年份">
-    </div>
-    <div class="actions"><button class="btn pri" id="go">分析</button><button class="btn" data-demo>用示例字幕试试</button><span id="msg" class="mut" role="status"></span></div>
+  <h1 class="ptitle">添加电影</h1>
+  <div id="online" class="hidden">
+    <label class="sbox" id="sqbox"><input id="sq" type="search" placeholder="搜索电影名，如 Inception" aria-label="搜索电影" autocomplete="off"></label>
+    <p id="smsg" class="mut small" role="status" style="margin-top:10px"></p>
+    <div id="sres" class="posters"></div>
+    <div class="or"><span>或者上传字幕文件</span></div>
   </div>
+  <div class="upload card">
+    <label class="drop" for="af"><span id="upi"></span><b id="fname">拖入字幕文件，或点击选择</b><span class="mut small">支持 .srt / .vtt，文件只在你的浏览器里处理，不会上传</span><input id="af" type="file" accept=".srt,.vtt,.txt"></label>
+    <div id="upf" class="upf hidden">
+      <div class="grid2"><input id="at" class="field" type="text" placeholder="电影名" aria-label="电影名"><input id="ay" class="field" type="text" inputmode="numeric" placeholder="年份" aria-label="年份"></div>
+      <button class="btn pri lg" id="go">生成词表</button>
+    </div>
+    <p id="msg" class="mut small center" role="status"></p>
+  </div>
+  <p class="center mut small" style="margin-top:18px">没有字幕文件？<button class="linkbtn" data-demo>用示例电影试试</button></p>
 </section>
 <p class="note hidden" id="tmdbnote">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
 </main>
 
+<nav class="tabbar" id="tabbar" aria-label="主导航"></nav>
+<input id="impf" type="file" accept=".json" class="hidden">
 <div id="toast" class="toast hidden" role="status"><span id="toastt"></span><span id="toasta"></span><button class="x" id="toastx" aria-label="关闭">×</button></div>
 
-<dialog id="fc" class="fc" aria-label="闪卡复习">
-  <div class="fcin">
-    <div class="fchead"><span id="fcn"></span><button class="btn sm" id="fcx">关闭</button></div>
-    <div class="fcbar"><i id="fcp"></i></div>
-    <div id="fcbody"></div>
-  </div>
+<dialog id="study" class="study" aria-label="学习">
+  <div class="shead"><button class="ib" id="sx" aria-label="结束学习"></button><div class="sprog"><i id="sp"></i></div><span id="sn"></span></div>
+  <div class="stage" id="stage"></div>
+  <div class="sact" id="sact"><button class="gbtn no" id="sno">不认识</button><button class="gbtn yes" id="syes">认识</button></div>
+  <p class="keys" id="keys">← 不认识　·　空格 翻面　·　认识 →</p>
 </dialog>
+
+<dialog id="set" class="sheet" aria-label="设置"><div class="sheetin" id="setin"></div></dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script>
@@ -301,6 +413,7 @@ const DEMO="1\n00:00:05,000 --> 00:00:08,000\nYou can't just wander into the anc
 </script>
 <script>
 const LEVELS=["A1","A2","B1","B2","C1","C2"], lvc=l=>'lv-'+l.toLowerCase();
+const LVNAME={A1:'入门',A2:'基础',B1:'中级',B2:'中高级',C1:'高级',C2:'精通'};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -309,6 +422,27 @@ const store={ // localStorage can throw (private mode, blocked site data): fall 
   set(k,v){try{localStorage.setItem('ml.'+k,JSON.stringify(v))}catch(e){}}
 };
 const status=(id,t,busy)=>{$(id).textContent=t;$(id).classList.toggle('busy',!!busy)};
+
+/* ---------- icons (24px stroke) ---------- */
+const ICONS={
+  film:'<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/>',
+  book:'<path d="M12 6.8C10.4 5.3 7.8 4.7 3.5 4.7v13.2c4.3 0 6.9.6 8.5 2.1 1.6-1.5 4.2-2.1 8.5-2.1V4.7c-4.3 0-6.9.6-8.5 2.1z"/><path d="M12 6.8V20"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+  star:'<path d="M12 3.6l2.55 5.2 5.7.83-4.13 4.02.98 5.68L12 16.65l-5.1 2.68.98-5.68L3.75 9.63l5.7-.83z"/>',
+  check:'<path d="M19.5 6.5 9.5 16.5 4.5 11.5"/>',
+  back:'<path d="M15 18.5 8.5 12 15 5.5"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  more:'<circle cx="5.5" cy="12" r="1.6" class="dot"/><circle cx="12" cy="12" r="1.6" class="dot"/><circle cx="18.5" cy="12" r="1.6" class="dot"/>',
+  sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  upload:'<path d="M12 16V5M7 10l5-5 5 5M5 20h14"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  flame:'<path d="M12 3c.8 3.3 5.5 5.6 5.5 10.5a5.5 5.5 0 0 1-11 0c0-2.3 1.2-4 2.4-5 .1 2 1 3.3 2.3 3.3-.3-3.3-.4-5.7.8-8.8z"/>',
+  play:'<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>',
+};
+const I=(n,s=20)=>`<svg class="i" viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true">${ICONS[n].replace(/class="dot"/g,'fill="currentColor" stroke="none"')}</svg>`;
+const SPK='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
 /* ---------- analyzer ---------- */
 const has=w=>Object.prototype.hasOwnProperty.call(LEX,w);
@@ -370,27 +504,37 @@ async function allMovies(){return db?tx('readonly',s=>s.getAll()):[...mem.values
 async function putMovie(m){db?await tx('readwrite',s=>s.put(m)):mem.set(m.id,m)}
 async function delMovie(id){db?await tx('readwrite',s=>s.delete(id)):mem.delete(id)}
 
-/* ---------- marks: lemma -> 'k' (认识) | 's' (生词本), shared by every movie ---------- */
-let marks=store.get('marks',{});
-const mk=l=>marks[l]||'';
-const stc=l=>mk(l)?'st-'+mk(l):'';
-function mark(l,v,toggle=true){
-  if(toggle&&marks[l]==v)delete marks[l];else{delete marks[l];marks[l]=v} // re-insert so the 生词本 lists newest first
-  store.set('marks',marks);
-  document.querySelectorAll(`.word[data-l="${CSS.escape(l)}"]`).forEach(c=>{
-    c.classList.remove('st-k','st-s');if(marks[l])c.classList.add('st-'+marks[l]);
-    c.querySelectorAll('.mk').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mk==marks[l]));
-  });
-  if(cur&&!$('detail').classList.contains('hidden'))renderFilters();
+/* ---------- preferences and daily progress ---------- */
+let goal=store.get('goal',20),autosay=store.get('autosay',true),myLevel=store.get('level',null),theme=store.get('theme','auto');
+let days=store.get('days',{}); // local date -> words studied that day
+const day=(d=new Date())=>d.toLocaleDateString('sv');
+const today=()=>days[day()]||0;
+function bump(){const k=day();days[k]=(days[k]||0)+1;store.set('days',days)}
+function streak(){const d=new Date();if(!days[day(d)])d.setDate(d.getDate()-1);let n=0;while(days[day(d)]){n++;d.setDate(d.getDate()-1)}return n}
+let sel=new Set(store.get('sel',[]));
+function setLevel(l){
+  myLevel=l;store.set('level',l);sel=new Set(LEVELS.slice(LEVELS.indexOf(l)));store.set('sel',[...sel]);
+  document.querySelectorAll('[data-mylv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mylv==l));
 }
 
-/* ---------- pronunciation (browser speech synthesis, offline on most systems) ---------- */
+/* ---------- marks: lemma -> 'k' (已掌握) | 's' (生词本), shared by every movie ---------- */
+let marks=store.get('marks',{});
+const mk=l=>marks[l]||'';
+function mark(l,v,toggle=true){
+  if(toggle&&marks[l]==v)delete marks[l];else{delete marks[l];marks[l]=v;bump()} // re-insert so the 生词本 lists newest first
+  store.set('marks',marks);
+  document.querySelectorAll(`.wrow[data-l="${CSS.escape(l)}"]`).forEach(r=>{
+    r.classList.toggle('st-k',marks[l]=='k');r.classList.toggle('st-s',marks[l]=='s');
+    r.querySelectorAll('[data-mk]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mk==marks[l]));
+  });
+}
+
+/* ---------- pronunciation (browser speech synthesis) ---------- */
 const canSay='speechSynthesis' in window;
 let voice=null;
 function pickVoice(){const vs=speechSynthesis.getVoices(),en=vs.filter(v=>/^en[-_]US/i.test(v.lang));voice=en.find(v=>/natural|google|samantha|aria|jenny/i.test(v.name))||en[0]||vs.find(v=>/^en/i.test(v.lang))||null}
 if(canSay){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
 function say(t){if(!canSay)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';if(voice)u.voice=voice;u.rate=.92;speechSynthesis.speak(u)}
-const SPK='<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const sayBtn=(t,label)=>canSay?`<button class="say" data-say="${esc(t)}" aria-label="${label}" title="${label}">${SPK}</button>`:'';
 
 /* fetch with a readable message when the network is the problem */
@@ -398,7 +542,6 @@ async function net(url,opt){
   try{return await fetch(url,opt)}
   catch(e){throw new Error(navigator.onLine?'网络连接失败，请稍后再试':'现在离线：需要联网才能用。已添加的电影、查词和复习不受影响')}
 }
-
 /* ---------- AI: scene explanation via the Worker (free Cloudflare Workers AI, no visitor key) ---------- */
 async function aiExplain(d){
   if(!API)throw new Error('当前版本未连接 AI 服务');
@@ -409,26 +552,45 @@ async function aiExplain(d){
 }
 const aiBtn=(w,x,mv)=>!API?'':`<button class="aibtn" data-w="${esc(w.lemma)}" data-f="${esc(x.form)}" data-s="${esc(x.sentence)}" data-t="${esc(x.t)}" data-m="${esc(x.m||mv?.title||'')}" data-y="${esc(x.y||mv?.year||'')}" title="用 AI 解释这句台词" aria-label="用 AI 解释这句台词">✨<span class="lbl"> 解释</span></button>`;
 
-/* ---------- cards ---------- */
-let movies=[],cur=null,idx=new Map();
+/* ---------- shared pieces ---------- */
+let movies=[],cur=null,idx=new Map();const rowSrc=new Map();
 const levelsOf=m=>Object.fromEntries(LEVELS.map(l=>[l,m.words.filter(w=>w.level==l).length]));
 const knownOf=m=>m.words.filter(w=>marks[w.lemma]=='k').length;
+const savedOf=m=>m.words.filter(w=>marks[w.lemma]=='s').length;
 const lvbar=levels=>`<div class="lvbar" role="img" aria-label="难度分布">${LEVELS.filter(l=>levels[l]).map(l=>`<i class="${lvc(l)}" style="flex:${levels[l]}" title="${l} · ${levels[l]}"></i>`).join('')}</div>`;
-const poster=m=>m.poster?`<img class="poster" src="${esc(m.poster)}" alt="" loading="lazy">`:`<div class="poster blank" aria-hidden="true">${esc((m.title||'?').trim().slice(0,1).toUpperCase())}</div>`;
+const hue=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))%360;return h};
+const cover=m=>m.poster?`<img src="${esc(m.poster)}" alt="" loading="lazy">`:`<div class="gen" style="--h:${hue(m.title)}"><small>${esc(m.year||'MOVIE')}</small>${esc(m.title)}</div>`;
+const ring=(p,label,sub='',sz=64)=>`<div class="ring" style="--p:${Math.min(p,1)};--sz:${sz}px"><span>${label}${sub?`<small>${sub}</small>`:''}</span></div>`;
+const short=zh=>(zh||'').split(/[；;，,]/)[0].trim();
 const hl=(sentence,form)=>{
   const m=sentence.match(new RegExp('\\b'+escRe(form)+'\\b','i'));
   return m?esc(sentence.slice(0,m.index))+`<span class="hit">${esc(m[0])}</span>`+esc(sentence.slice(m.index+m[0].length)):esc(sentence);
 };
-const occ=(w,x,mv)=>`<div class="occ"><div class="sub"><span class="tc">${x.t}</span><span class="line">${x.m?`<span class="from">《${esc(x.m)}》</span>`:''}${hl(x.sentence,x.form)}</span><span class="subact">${sayBtn(x.sentence,'朗读这句')}${aiBtn(w,x,mv)}</span></div><div class="aiout" aria-live="polite"></div></div>`;
+const strip=(x,extra='')=>`<div class="sub"><span class="tc">${x.t}</span><span class="line">${x.m?`<span class="from">《${esc(x.m)}》</span>`:''}${hl(x.sentence,x.form)}</span><span class="subact">${sayBtn(x.sentence,'朗读这句')}${extra}</span></div>`;
+const occ=(w,x,mv)=>`<div class="occ">${strip(x,aiBtn(w,x,mv))}<div class="aiout" aria-live="polite"></div></div>`;
 
-function wordCard(w,mv){
-  const o=w.occurrences||[],more=o.length-1;
-  return `<article class="word ${lvc(w.level)} ${stc(w.lemma)}" data-l="${esc(w.lemma)}">
-    <div class="wh"><h3 class="lemma">${esc(w.lemma)}</h3>${sayBtn(w.lemma,'朗读单词')}<span class="pill">${w.level}</span>${(w.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}<span class="cnt">${w.cnt??`出现 ${w.count} 次`}</span></div>
-    ${w.zh?`<p class="zh">${esc(w.zh)}</p>`:''}<p class="en">${esc(w.definition)}</p>
-    ${o.length?`<div class="subs">${occ(w,o[0],mv)}${more>0?`<div class="more hidden">${o.slice(1).map(x=>occ(w,x,mv)).join('')}</div><button class="linkbtn moretg" data-lbl="再看 ${more} 句字幕">再看 ${more} 句字幕</button>`:''}</div>`:''}
-    <div class="wact"><button class="mk k" data-mk="k" aria-pressed="${mk(w.lemma)=='k'}">✓ 认识</button><button class="mk s" data-mk="s" aria-pressed="${mk(w.lemma)=='s'}">★ 生词本</button></div></article>`;
+function wordRow(w,mv,open=false){
+  rowSrc.set(w.lemma,{w,mv});
+  const s=mk(w.lemma);
+  return `<div class="wrow ${lvc(w.level)}${s?' st-'+s:''}${open?' open':''}" data-l="${esc(w.lemma)}">
+    <button class="wmain" aria-expanded="${open}"><span class="lvt">${w.level}</span><span class="ww">${esc(w.lemma)}</span><span class="wz">${esc(short(w.zh)||w.definition)}</span></button>
+    <button class="ib mk star" data-mk="s" aria-pressed="${s=='s'}" aria-label="加入生词本" title="加入生词本">${I('star')}</button>
+    <button class="ib mk ok" data-mk="k" aria-pressed="${s=='k'}" aria-label="标记为已掌握" title="已掌握">${I('check')}</button>
+    ${open?wordDetail(w,mv):''}</div>`;
 }
+function wordDetail(w,mv){
+  const o=w.occurrences||[],more=o.length-2;
+  return `<div class="wd"><div class="wdh">${sayBtn(w.lemma,'朗读单词')}<span class="pill">${w.level} ${LVNAME[w.level]}</span>${(w.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}<span class="cnt">${w.cnt??`出现 ${w.count} 次`}</span></div>
+    ${w.zh?`<p class="zh">${esc(w.zh)}</p>`:''}<p class="en">${esc(w.definition)}</p>
+    ${o.slice(0,2).map(x=>occ(w,x,mv)).join('')}
+    ${more>0?`<div class="more hidden">${o.slice(2).map(x=>occ(w,x,mv)).join('')}</div><button class="linkbtn moretg" data-lbl="再看 ${more} 句台词">再看 ${more} 句台词</button>`:''}</div>`;
+}
+function toggleRow(row){
+  const open=!row.classList.contains('open');
+  row.classList.toggle('open',open);row.querySelector('.wmain').setAttribute('aria-expanded',open);
+  if(open&&!row.querySelector('.wd')){const s=rowSrc.get(row.dataset.l);if(s)row.insertAdjacentHTML('beforeend',wordDetail(s.w,s.mv))}
+}
+function collapse(row){row.style.height=row.offsetHeight+'px';row.offsetHeight;row.classList.add('gone');row.style.height='0';setTimeout(()=>row.remove(),280)}
 
 /* long lists render in chunks as you scroll */
 const io='IntersectionObserver' in window?new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){io.unobserve(e.target);fill(e.target.parentElement)}},{rootMargin:'1200px 0px'}):null;
@@ -444,59 +606,113 @@ function fill(box){
   box.insertAdjacentHTML('beforeend',box._items.splice(0,40).map(box._render).join(''));
   if(box._items.length){box.append(box._s);io&&io.observe(box._s)}
 }
+const emptyBox=(em,title,text)=>`<div class="empty"><div class="em">${em}</div><b>${title}</b><p>${text}</p></div>`;
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(text,action,ms=3500){
+  clearTimeout(toastT);$('toastt').textContent=text;$('toasta').innerHTML='';if(action)$('toasta').append(action);
+  $('toast').classList.remove('hidden');if(ms)toastT=setTimeout(()=>$('toast').classList.add('hidden'),ms);
+}
+const actBtn=(label,fn)=>{const b=document.createElement('button');b.className='tbtn';b.textContent=label;b.onclick=()=>{$('toast').classList.add('hidden');fn()};return b};
+$('toastx').onclick=()=>$('toast').classList.add('hidden');
+
+function onMark(b){
+  const row=b.closest('.wrow'),l=row.dataset.l,before=mk(l);
+  mark(l,b.dataset.mk);
+  const now=mk(l),inMovie=!!row.closest('#words'),inBook=!!row.closest('#wres')&&!$('wq').value.trim();
+  if(inMovie)renderFilters();
+  if((inMovie&&!stOk(l))||(inBook&&now!='s')){
+    collapse(row);
+    toast(now=='k'?`「${l}」已掌握`:now=='s'?`「${l}」已加入生词本`:`已取消「${l}」的标记`,
+      actBtn('撤销',()=>{delete marks[l];if(before)marks[l]=before;store.set('marks',marks);rerender()}),4000);
+  }else if(now=='s')toast(`「${l}」已加入生词本`,null,1600);
+}
 
 document.addEventListener('click',async e=>{
+  const menu=document.querySelector('details.menu[open]');if(menu&&!menu.contains(e.target))menu.open=false;
   const t=e.target.closest('button');if(!t)return;
-  if(t.dataset.say!=null)return say(t.dataset.say);
-  if(t.dataset.go!=null)return go(t.dataset.go);
-  if(t.dataset.demo!=null)return runDemo();
-  if(t.dataset.q!=null){$('wq').value=t.dataset.q;return renderWordTab()}
-  if(t.classList.contains('mk'))return mark(t.closest('[data-l]').dataset.l,t.dataset.mk);
-  if(t.classList.contains('moretg'))return t.textContent=t.previousElementSibling.classList.toggle('hidden')?t.dataset.lbl:'收起';
+  const d=t.dataset;
+  if(d.say!=null)return say(d.say);
+  if(d.go!=null)return go(d.go);
+  if(d.demo!=null)return runDemo();
+  if(d.study!=null)return study(d.study);
+  if(d.mylv)return setLevel(d.mylv);
+  if(d.q!=null){$('wq').value=d.q;return renderWordTab()}
+  if(d.mk)return onMark(t);
+  if(d.close!=null)return t.closest('dialog').close();
+  if(t.classList.contains('wmain'))return toggleRow(t.closest('.wrow'));
+  if(t.classList.contains('moretg'))return t.textContent=t.previousElementSibling.classList.toggle('hidden')?d.lbl:'收起';
   if(t.classList.contains('aibtn')){
     const out=t.closest('.occ').querySelector('.aiout');out.classList.add('on','busy');out.textContent='AI 思考中…';
-    try{out.textContent=await aiExplain(t.dataset)}catch(err){out.textContent=err.message}
+    try{out.textContent=await aiExplain(d)}catch(err){out.textContent=err.message}
     out.classList.remove('busy');
   }
 });
 
 /* ---------- routing: #m/<id>, #w/<word>, #add ---------- */
-function tab(n){for(const [t,v] of [['tm','vm'],['tw','vw'],['ta','va']]){$(t).classList.toggle('on',t==n);$(t).toggleAttribute('aria-current',t==n);$(v).classList.toggle('hidden',t!=n)}}
+const NAV=[['','电影','film'],['w','单词','book'],['add','添加','plus']];
+$('dnav').innerHTML=NAV.map(([h,n,i])=>`<a href="#${h}" data-nav="${h}">${I(i,17)}${n}</a>`).join('');
+$('tabbar').innerHTML=NAV.map(([h,n,i])=>`<a href="#${h}" data-nav="${h}">${I(i,23)}<span>${n}</span></a>`).join('');
+$('setb').innerHTML=I('sliders',21);$('backb').innerHTML=I('back',22);$('moreb').innerHTML=I('more',22);$('dqb').innerHTML=I('search',19);
+$('sx').innerHTML=I('x',22);$('upi').innerHTML=I('upload',30);
+$('wqbox').insertAdjacentHTML('afterbegin',I('search'));$('sqbox').insertAdjacentHTML('afterbegin',I('search'));
+$('csv').innerHTML=I('download',18)+'导出词表 CSV';$('sno').innerHTML=I('x',20)+'不认识';$('syes').innerHTML=I('check',20)+'认识';
+const VIEWS={vh:'',vd:'',vw:'w',va:'add'};
+function show(v){
+  for(const k in VIEWS)$(k).classList.toggle('hidden',k!=v);
+  document.querySelectorAll('[data-nav]').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav==VIEWS[v]));
+}
 const go=h=>{if(location.hash.slice(1)===h)route();else location.hash=h};
-$('tm').onclick=()=>go('');$('tw').onclick=()=>go('w');$('ta').onclick=()=>go('add');
 function route(){
   const h=decodeURIComponent(location.hash.slice(1));
   document.title='MovieLingo';
-  if(h.startsWith('m/')){tab('tm');openMovie(h.slice(2))}
-  else if(h=='w'||h.startsWith('w/')){tab('tw');const q=h.slice(2);if($('wq').value.trim().toLowerCase()!==q)$('wq').value=q;renderWordTab()}
-  else if(h=='add'){tab('ta');if(API)setTimeout(()=>$('sq').focus())}
-  else{tab('tm');showList()}
+  if(h.startsWith('m/'))openMovie(h.slice(2));
+  else if(h=='w'||h.startsWith('w/')){show('vw');const q=h.slice(2);if($('wq').value.trim().toLowerCase()!==q)$('wq').value=q;renderWordTab()}
+  else if(h=='add'){show('va');if(API&&matchMedia('(hover:hover)').matches)setTimeout(()=>$('sq').focus())}
+  else{show('vh');renderHome()}
+  if(!h.startsWith('m/'))scrollTo(0,0);
 }
 addEventListener('hashchange',route);
+function rerender(){
+  if(!$('vd').classList.contains('hidden')&&cur){renderFilters();renderWords()}
+  else if(!$('vh').classList.contains('hidden'))renderHome();
+  else if(!$('vw').classList.contains('hidden'))renderWordTab();
+}
 
-/* ---------- movie list ---------- */
+/* ---------- home ---------- */
 async function refresh(){
   movies=(await allMovies()).sort((a,b)=>b.added-a.added);
   idx=new Map();
   for(const m of movies)for(const w of m.words){if(!idx.has(w.lemma))idx.set(w.lemma,[]);idx.get(w.lemma).push({m,w})}
 }
-function showList(){
-  cur=null;$('detail').classList.add('hidden');$('listwrap').classList.remove('hidden');
-  $('lhead').classList.toggle('hidden',!movies.length);$('exp').classList.toggle('hidden',!movies.length); // import stays: restoring a backup on a new device
-  $('lcount').textContent=movies.length||'';
-  $('list').innerHTML=movies.length?movies.map(m=>{
-    const n=m.words.length,k=knownOf(m);
-    return `<a class="movie" href="#m/${encodeURIComponent(m.id)}">${poster(m)}<div class="mbody"><div class="mtitle">${esc(m.title)}</div><div class="mmeta">${esc(m.year)}${m.year?' · ':''}${n} 个词${k?` · 已认识 ${Math.round(k/n*100)}%`:''}</div>${lvbar(levelsOf(m))}</div></a>`;
-  }).join(''):`<div class="hero"><h2>看电影之前，先把生词过一遍</h2>
-    <ol class="steps"><li><b>添加电影</b>${API?'搜索片名自动下载英文字幕，或':''}上传 .srt 字幕</li><li><b>按难度看词</b>A1–C2 分级，每个词带时间码和台词原句</li><li><b>标记和复习</b>认识的划掉，不会的进生词本，用闪卡过一遍</li></ol>
-    <div class="actions"><button class="btn pri" data-go="add">${API?'🔍 搜索电影':'＋ 上传字幕'}</button><button class="btn" data-demo>用示例字幕试试</button></div></div>`;
+const pcard=m=>{const n=m.words.length,k=knownOf(m),p=n?k/n:0;
+  return `<a class="pcard" href="#m/${encodeURIComponent(m.id)}"><div class="cover">${cover(m)}</div><div class="pb"><i style="width:${p*100}%"></i></div><div class="pt">${esc(m.title)}</div><div class="pm">${n} 个词${k?` · 已掌握 ${Math.round(p*100)}%`:''}</div></a>`};
+function renderHome(){
+  if(!movies.length){$('home').innerHTML=welcome();return}
+  const t=today(),s=streak(),last=movies.find(m=>m.id==store.get('last'))||movies[0],d=deckFor(last).length;
+  $('home').innerHTML=`<section class="today card">${ring(t/goal,t,'/ '+goal)}
+    <div><h2>${t>=goal?'今日目标完成':'今天'}</h2><p>${s?`<span class="fl">${I('flame',16)}连续 ${s} 天</span> · `:''}${t>=goal?'明天继续保持':t?`还差 ${goal-t} 个完成今日目标`:'每天学一点，看电影时就能听懂更多'}</p>
+    ${d?`<p style="margin-top:2px">下一组：《${esc(last.title)}》</p>`:''}</div>
+    ${d?`<button class="btn pri lg" data-study="${esc(last.id)}">${I('play',16)}继续学习</button>`:''}</section>
+    <div class="sechead"><h2>我的电影</h2><a class="linkbtn" href="#add">${I('plus',16)}添加</a></div>
+    <div class="posters">${movies.map(pcard).join('')}</div>`;
 }
+const welcome=()=>`<section class="welcome">
+  <h1>看电影之前，<br>先学会里面的<em>单词</em></h1>
+  <p class="lead">选一部电影，按你的英语水平生成生词表。每个词都带台词原句、中文释义和发音，再用卡片快速过一遍。</p>
+  <div class="demo" aria-hidden="true">${strip({t:'00:42:17',form:'journey',sentence:'Every great journey begins with a single step.'})}
+    <div class="pop"><span class="pill lv-b1">B1</span><b>journey</b><span class="mut">旅程；旅行</span></div></div>
+  <div class="lvpick"><p>你的英语水平大概是？</p>
+    <div class="chips">${['A2','B1','B2','C1'].map(l=>`<button class="chip ${lvc(l)}" data-mylv="${l}" aria-pressed="${myLevel==l}">${l} ${LVNAME[l]}</button>`).join('')}</div>
+    <p class="mut small">决定默认显示哪些难度的词，以后可以在设置里改。</p></div>
+  <div class="actions"><a class="btn pri lg" href="#add">${I('plus',18)}添加第一部电影</a><button class="btn lg" data-demo>先看个示例</button></div>
+</section>`;
 
 /* ---------- movie detail ---------- */
-const SEGS=[['todo','待学'],['s','生词本'],['k','已认识'],['all','全部']];
-const EMPTY={todo:'这一档的词你都认识了 🎉',s:'生词本里还没有这部电影的词',k:'还没有标记认识的词',all:'没有符合的词'};
+const SEGS=[['todo','待学'],['s','生词本'],['k','已掌握'],['all','全部']];
+const EMPTY={todo:['🎉','这些词你都掌握了','换个等级，或者去复习生词本。'],s:['⭐','还没有生词','点词右边的星星，或在学习时选「不认识」。'],k:['✓','还没有掌握的词','点词右边的勾，或在学习时选「认识」。'],all:['🔍','没有符合的词','换个等级试试。']};
 const view={q:'',sort:store.get('sort','level'),st:store.get('st','todo')};
-let sel=new Set(store.get('sel',[]));
 const stOk=l=>view.st=='all'||(view.st=='todo'?mk(l)!='k':mk(l)==view.st);
 function filtered(){
   const q=view.q.toLowerCase().trim();
@@ -507,12 +723,14 @@ function filtered(){
 }
 function openMovie(id){
   cur=movies.find(m=>m.id==id);if(!cur)return go('');
-  $('listwrap').classList.add('hidden');$('detail').classList.remove('hidden');
-  $('mposter').innerHTML=poster(cur);
+  store.set('last',cur.id);show('vd');
+  $('mbg').style.background=cur.poster?`center/cover no-repeat url(${JSON.stringify(cur.poster)})`:`linear-gradient(155deg,hsl(${hue(cur.title)} 50% 50%),hsl(${hue(cur.title)+40} 50% 25%))`;
+  $('mcover').innerHTML=cover(cur);
   $('mt').textContent=cur.title;document.title=cur.title+' · MovieLingo';
+  $('msub').textContent=`${cur.year?cur.year+' · ':''}${cur.words.length} 个词`;
   $('mbar').innerHTML=lvbar(levelsOf(cur));
-  $('dq').value=view.q='';$('sort').value=view.sort;
-  $('del').dataset.arm='';$('del').textContent='删除';
+  $('dq').value=view.q='';$('dqrow').classList.add('hidden');$('sort').value=view.sort;
+  $('menu').open=false;disarm();
   renderFilters();renderWords();scrollTo(0,0);
 }
 function renderFilters(){
@@ -520,25 +738,29 @@ function renderFilters(){
   for(const w of inLv){const s=mk(w.lemma);if(s!='k')cnt.todo++;if(s)cnt[s]++}
   $('seg').innerHTML=SEGS.map(([k,n])=>`<button data-st="${k}" aria-pressed="${view.st==k}">${n}<b>${cnt[k]}</b></button>`).join('');
   const lc=Object.fromEntries(LEVELS.map(l=>[l,0]));for(const w of cur.words)if(stOk(w.lemma))lc[w.level]++;
-  $('lv').innerHTML=LEVELS.map(l=>`<button class="chip ${lvc(l)} ${sel.has(l)?'on':''}" aria-pressed="${sel.has(l)}" data-lv="${l}">${l} <b>${lc[l]}</b></button>`).join('')+(sel.size?'<button class="linkbtn" data-lv="">全部等级</button>':'');
-  const n=cur.words.length,k=knownOf(cur),s=cur.words.filter(w=>marks[w.lemma]=='s').length;
-  $('msub').textContent=`${cur.year?cur.year+' · ':''}${n} 个词`;
-  $('prog').innerHTML=`<div class="pbar"><i style="width:${n?k/n*100:0}%"></i></div><span>已认识 <b>${k}</b> / ${n}${s?` · 生词本 <b>${s}</b>`:''}</span>`;
-  const d=filtered().filter(w=>mk(w.lemma)!='k').length;
-  $('fcgo').disabled=!d;$('fcgo').innerHTML=`▶ 闪卡复习<b>${d}</b>`;
+  $('lv').innerHTML=LEVELS.map(l=>`<button class="chip ${lvc(l)}" aria-pressed="${sel.has(l)}" data-lv="${l}">${l}<b>${lc[l]}</b></button>`).join('')+(sel.size?'<button class="linkbtn" data-lv="">全部等级</button>':'');
+  const n=cur.words.length,k=knownOf(cur),s=savedOf(cur),p=n?k/n:0;
+  $('mring').innerHTML=ring(p,Math.round(p*100)+'%','',58);
+  $('mpct').textContent=k?`已掌握 ${k} / ${n} 个词`:`共 ${n} 个词`;
+  $('mstat').textContent=s?`生词本里有 ${s} 个`:k?'继续加油':'先学一组，看看你认识多少';
+  const d=deckFor(cur).length;
+  $('learn').disabled=!d;
+  $('learn').innerHTML=d?`${I('play',18)}开始学习<span>· ${Math.min(d,sessionSize())} 个词</span>`:'这个难度的词你都掌握了 🎉';
 }
 function renderWords(){
-  const ws=filtered();
-  $('wcount').textContent=`显示 ${ws.length} 个`;
-  lazyList($('words'),ws,w=>wordCard(w,cur),`<div class="empty"><b>${view.q?`没有找到「${esc(view.q)}」`:EMPTY[view.st]}</b>换个等级或筛选条件试试。</div>`);
+  const ws=filtered(),e=view.q?['🔍',`没有找到「${esc(view.q)}」`,'换个拼写，或者清空搜索。']:EMPTY[view.st];
+  lazyList($('words'),ws,w=>wordRow(w,cur),emptyBox(...e));
 }
 $('seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;view.st=b.dataset.st;store.set('st',view.st);renderFilters();renderWords()};
 $('lv').onclick=e=>{const b=e.target.closest('button');if(!b)return;const l=b.dataset.lv;if(!l)sel.clear();else sel.has(l)?sel.delete(l):sel.add(l);store.set('sel',[...sel]);renderFilters();renderWords()};
 $('sort').onchange=()=>{view.sort=$('sort').value;store.set('sort',view.sort);renderWords()};
-let dqT;$('dq').oninput=()=>{clearTimeout(dqT);dqT=setTimeout(()=>{view.q=$('dq').value;renderFilters();renderWords()},150)};
+$('dqb').onclick=()=>{const h=$('dqrow').classList.toggle('hidden');if(h&&view.q){$('dq').value=view.q='';renderWords()}else if(!h)$('dq').focus()};
+let dqT;$('dq').oninput=()=>{clearTimeout(dqT);dqT=setTimeout(()=>{view.q=$('dq').value;renderWords()},150)};
+$('learn').onclick=()=>study(cur.id);
+const disarm=()=>{$('del').dataset.arm='';$('del').innerHTML=I('trash',18)+'删除这部电影'};
 $('del').onclick=async()=>{
-  if($('del').dataset.arm!=cur.id){$('del').dataset.arm=cur.id;$('del').textContent='再点一次确认删除';return}
-  await delMovie(cur.id);await refresh();go('');
+  if(!$('del').dataset.arm){$('del').dataset.arm='1';$('del').innerHTML=I('trash',18)+'再点一次确认删除';return}
+  const t=cur.title;await delMovie(cur.id);await refresh();go('');toast(`已删除《${t}》`);
 };
 
 /* ---------- export ---------- */
@@ -548,43 +770,78 @@ function download(name,text,type){
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 const csv=rows=>'﻿'+rows.map(r=>r.map(v=>{v=String(v??'');return/[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n');
-const ST={k:'认识',s:'生词本'};
+const ST={k:'已掌握',s:'生词本'};
 const wordRows=(ws,mv)=>[['word','level','chinese','english','time','subtitle','movie','status'],
   ...ws.map(w=>{const x=w.occurrences[0]||{};return[w.lemma,w.level,w.zh,w.definition,x.t,x.sentence,x.m||mv?.title,ST[mk(w.lemma)]]})];
-$('csv').onclick=()=>download(`${cur.title} 词表.csv`,csv(wordRows(filtered(),cur)),'text/csv');
+$('csv').onclick=()=>{$('menu').open=false;download(`${cur.title} 词表.csv`,csv(wordRows(filtered(),cur)),'text/csv');toast('词表已导出')};
 
-/* ---------- flashcards ---------- */
-let deck=[],di=0,shown=false,tally;
-function startDeck(ws){deck=ws;di=0;shown=false;tally={k:0,s:0,miss:[]};fcShow();if(!$('fc').open)$('fc').showModal()}
-$('fcgo').onclick=()=>startDeck(filtered().filter(w=>mk(w.lemma)!='k'));
-function fcShow(){
-  const w=deck[di];$('fcp').style.width=di/deck.length*100+'%';
-  if(!w){
-    $('fcn').textContent='完成';
-    $('fcbody').innerHTML=`<div class="fcdone"><b>这一轮完成了</b><p class="mut">认识 ${tally.k} 个 · 加入生词本 ${tally.s} 个</p><div class="actions" style="justify-content:center">${tally.miss.length?`<button class="btn pri" id="fcagain">再练这 ${tally.miss.length} 个生词</button>`:''}<button class="btn" id="fcend">关闭</button></div></div>`;
-    if(tally.miss.length)$('fcagain').onclick=()=>startDeck(tally.miss);
-    $('fcend').onclick=()=>$('fc').close();return;
-  }
-  $('fcn').textContent=`${di+1} / ${deck.length}`;
-  const x=w.occurrences[0];
-  $('fcbody').innerHTML=`<div class="word fccard ${lvc(w.level)}">
-    <div class="wh"><h3 class="lemma">${esc(w.lemma)}</h3>${sayBtn(w.lemma,'朗读单词')}<span class="pill">${w.level}</span></div>
-    ${x?`<div class="sub"><span class="tc">${x.t}</span><span class="line">${hl(x.sentence,x.form)}</span><span class="subact">${sayBtn(x.sentence,'朗读这句')}</span></div>`:''}
-    ${shown?`<div class="fcans">${w.zh?`<p class="zh">${esc(w.zh)}</p>`:''}<p class="en">${esc(w.definition)}</p></div>`:'<button class="btn fcreveal" id="fcr">显示释义<kbd>空格</kbd></button>'}
-  </div>
-  <div class="fcgrade" style="margin-top:14px"><button class="btn" id="fcno">✗ 不认识<kbd>1</kbd></button><button class="btn pri" id="fcyes">✓ 认识<kbd>2</kbd></button></div>`;
-  if(!shown)$('fcr').onclick=reveal;
-  $('fcno').onclick=()=>grade('s');$('fcyes').onclick=()=>grade('k');
+/* ---------- study session: flip cards, swipe right = 认识, left = 不认识 ---------- */
+const sessionSize=()=>Math.min(goal,20);
+function deckFor(m){ // saved words first, then the rest of what you still have to learn, at your levels
+  if(!m)return[];
+  const ws=m.words.filter(w=>(!sel.size||sel.has(w.level))&&mk(w.lemma)!='k');
+  return[...ws.filter(w=>mk(w.lemma)=='s'),...ws.filter(w=>mk(w.lemma)!='s')];
 }
-function reveal(){if(!shown&&deck[di]){shown=true;fcShow()}}
-function grade(v){const w=deck[di];if(!w)return;mark(w.lemma,v,false);tally[v]++;if(v=='s')tally.miss.push(w);di++;shown=false;fcShow()}
-$('fc').addEventListener('keydown',e=>{
-  if(e.key==' '){e.preventDefault();reveal()}
-  else if(e.key=='1'||e.key=='ArrowLeft')grade('s');
-  else if(e.key=='2'||e.key=='ArrowRight')grade('k');
+const bookEntries=()=>Object.keys(marks).filter(l=>marks[l]=='s'&&has(l)).reverse().map(entryFor);
+let deck=[],di=0,flipped=false,tally,source=null,busy=false;
+function study(src){
+  source=src;
+  const all=src=='book'?bookEntries():deckFor(movies.find(m=>m.id==src));
+  if(!all.length)return toast('没有需要学习的词了 🎉');
+  deck=all.slice(0,sessionSize());di=0;tally={k:0,s:0};
+  if(!$('study').open)$('study').showModal();
+  renderCard();
+}
+function renderCard(){
+  const w=deck[di];busy=false;flipped=false;
+  $('sp').style.width=di/deck.length*100+'%';$('sn').textContent=w?`${di+1} / ${deck.length}`:'';
+  if(!w)return summary();
+  $('sact').classList.remove('hidden');$('keys').classList.remove('hidden');
+  const x=w.occurrences?.[0],line=x?strip(x):'';
+  $('stage').innerHTML=`<div class="swipe" id="sw"><div class="card3d" id="c3">
+    <div class="face front ${lvc(w.level)}"><span class="pill">${w.level} ${LVNAME[w.level]}</span><h2 class="sword">${esc(w.lemma)}</h2>${sayBtn(w.lemma,'朗读单词')}${line}<p class="hint">点击卡片查看释义</p></div>
+    <div class="face back ${lvc(w.level)}"><div class="bw"><b>${esc(w.lemma)}</b>${sayBtn(w.lemma,'朗读单词')}</div>${w.zh?`<p class="szh">${esc(w.zh)}</p>`:''}<p class="sen">${esc(w.definition)}</p>${line}</div>
+  </div><div class="stamp yes">认识</div><div class="stamp no">不认识</div></div>`;
+  bindSwipe($('sw'));
+  if(autosay)say(w.lemma);
+}
+function flip(){if(!deck[di])return;flipped=!flipped;$('c3').classList.toggle('flipped',flipped)}
+function grade(v){
+  const w=deck[di];if(!w||busy)return;busy=true;
+  mark(w.lemma,v,false);tally[v]++;
+  const sw=$('sw'),dir=v=='k'?1:-1;
+  sw.style.transition='transform .28s ease-in,opacity .28s';sw.style.transform=`translateX(${dir*130}%) rotate(${dir*14}deg)`;sw.style.opacity='0';
+  setTimeout(()=>{di++;renderCard()},240);
+}
+function bindSwipe(el){
+  let s=null;
+  el.onpointerdown=e=>{if(e.target.closest('button'))return;s={x:e.clientX,moved:false};el.setPointerCapture(e.pointerId);el.style.transition='none';el.style.cursor='grabbing'};
+  el.onpointermove=e=>{if(!s)return;const dx=e.clientX-s.x;if(Math.abs(dx)>6)s.moved=true;el.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;el.dataset.dir=dx>50?'yes':dx<-50?'no':''};
+  el.onpointerup=el.onpointercancel=e=>{
+    if(!s)return;const dx=e.clientX-s.x,moved=s.moved;s=null;el.dataset.dir='';el.style.cursor='';
+    if(dx>110)return grade('k');if(dx<-110)return grade('s');
+    el.style.transition='transform .3s cubic-bezier(.2,.8,.2,1)';el.style.transform='';
+    if(!moved&&e.type=='pointerup')flip();
+  };
+}
+function summary(){
+  $('sact').classList.add('hidden');$('keys').classList.add('hidden');
+  const more=(source=='book'?bookEntries():deckFor(movies.find(m=>m.id==source))).length,t=today(),s=streak();
+  $('stage').innerHTML=`<div class="done"><div class="donebadge">${I('check',44)}</div><h2>这一组完成了</h2>
+    <p class="mut">${t>=goal?'今日目标已完成 🎉':`今天已学 ${t} 个，目标 ${goal} 个`}${s?` · 连续 ${s} 天`:''}</p>
+    <div class="stats"><div><b style="color:var(--ok)">${tally.k}</b><span>认识</span></div><div><b style="color:var(--accent)">${tally.s}</b><span>加入生词本</span></div></div>
+    <div class="actions">${more?`<button class="btn pri lg" id="again">再学一组</button>`:''}<button class="btn lg" id="fin">完成</button></div></div>`;
+  if(more)$('again').onclick=()=>study(source);
+  $('fin').onclick=()=>$('study').close();
+}
+$('sno').onclick=()=>grade('s');$('syes').onclick=()=>grade('k');$('sx').onclick=()=>$('study').close();
+$('study').addEventListener('keydown',e=>{
+  if(!deck[di])return;
+  if(e.key==' '){e.preventDefault();flip()}
+  else if(e.key=='ArrowLeft'||e.key=='1')grade('s');
+  else if(e.key=='ArrowRight'||e.key=='2')grade('k');
 });
-$('fcx').onclick=()=>$('fc').close();
-$('fc').addEventListener('close',()=>{if(cur)renderWords()});
+$('study').addEventListener('close',()=>{if(canSay)speechSynthesis.cancel();rerender()});
 
 /* ---------- word lookup + 生词本 ---------- */
 let LEXK=null;
@@ -598,18 +855,20 @@ function renderWordTab(){
   const q=$('wq').value.trim().toLowerCase();
   history.replaceState(null,'','#w'+(q?'/'+encodeURIComponent(q):''));
   if(!q){
-    const ls=Object.keys(marks).filter(l=>marks[l]=='s'&&has(l)).reverse();
-    $('whead').innerHTML=`<h2 class="sech">我的生词本 <span class="mut">${ls.length}</span></h2>${ls.length?'<button class="btn sm" id="wcsv">导出 CSV</button>':''}`;
-    if(ls.length)$('wcsv').onclick=()=>download('MovieLingo 生词本.csv',csv(wordRows(ls.map(entryFor))),'text/csv');
-    lazyList($('wres'),ls.map(entryFor),w=>wordCard(w),'<div class="empty"><b>生词本是空的</b>在词卡上点「★ 生词本」，或者闪卡复习时选「不认识」，词就会收集到这里。</div>');
+    const ls=bookEntries();
+    $('whead').innerHTML=`<div class="bookhead"><div><h2>生词本</h2><p class="mut small">${ls.length?`${ls.length} 个词，学会了就点勾`:'收集你还不认识的词'}</p></div>
+      ${ls.length?`<div class="actions"><button class="ib" id="wcsv" aria-label="导出生词本 CSV" title="导出 CSV">${I('download')}</button><button class="btn pri" data-study="book">${I('play',15)}复习</button></div>`:''}</div>`;
+    if(ls.length)$('wcsv').onclick=()=>download('MovieLingo 生词本.csv',csv(wordRows(ls)),'text/csv');
+    $('sugg').innerHTML='';
+    lazyList($('wres'),ls,w=>wordRow(w),emptyBox('⭐','生词本是空的','在词表里点星星，或学习时选「不认识」，词就会收集到这里。'));
     return;
   }
   const clean=q.replace(/[^a-z]/g,''),lem=clean&&lemmaOf(clean);
   if(!LEXK)LEXK=Object.keys(LEX).sort((a,b)=>LEX[b][1]-LEX[a][1]);
-  const sug=clean.length>=2?LEXK.filter(w=>w!=lem&&w.startsWith(clean)&&(idx.has(w)||LEX[w][1]>=280)).sort((a,b)=>idx.has(b)-idx.has(a)).slice(0,12):[]; // zipf < 2.8 is mostly names and junk
-  const head=(lem&&lem!=clean?`<p class="mut">${esc(clean)} 的原形是 <b>${esc(lem)}</b></p>`:'')+(sug.length?`<div class="sugg"><span class="mut">相关</span>${sug.map(w=>`<button class="chip ${lvc(LEVELS[LEX[w][0]])}" data-q="${w}">${w}</button>`).join('')}</div>`:'');
-  $('whead').innerHTML=head&&`<div class="wsub">${head}</div>`;
-  lazyList($('wres'),lem?[entryFor(lem)]:[],w=>wordCard(w),'<div class="empty"><b>词表里没有这个词</b>可能是专有名词、拼写不对，或太简单没有收录。</div>');
+  const sug=clean.length>=2?LEXK.filter(w=>w!=lem&&w.startsWith(clean)&&(idx.has(w)||LEX[w][1]>=280)).sort((a,b)=>idx.has(b)-idx.has(a)).slice(0,10):[]; // zipf < 2.8 is mostly names and junk
+  $('whead').innerHTML=(lem&&lem!=clean?`<p class="lemhint">${esc(clean)} 的原形是 <b>${esc(lem)}</b></p>`:'<div style="height:16px"></div>');
+  lazyList($('wres'),lem?[entryFor(lem)]:[],w=>wordRow(w,null,true),emptyBox('🤔','词表里没有这个词','可能是人名地名、拼写不对，或者太简单没有收录。'));
+  $('sugg').innerHTML=sug.length?`<span class="mut">相关</span>${sug.map(w=>`<button class="chip ${lvc(LEVELS[LEX[w][0]])}" data-q="${w}">${w}</button>`).join('')}`:'';
 }
 let wqT;$('wq').oninput=()=>{clearTimeout(wqT);wqT=setTimeout(renderWordTab,150)};
 
@@ -617,7 +876,7 @@ let wqT;$('wq').oninput=()=>{clearTimeout(wqT);wqT=setTimeout(renderWordTab,150)
 async function addMovie(title,year,text,poster=''){
   const words=analyze(text),id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   await putMovie({id,title,year,poster,added:Date.now(),words});
-  await refresh();status('msg','');go('m/'+id);
+  await refresh();status('msg','');go('m/'+id);toast(`《${title}》已添加，共 ${words.length} 个词`);
 }
 async function runDemo(){try{await addMovie('Demo Adventure','2024',DEMO)}catch(e){status('msg','失败：'+e.message)}}
 const decodeBuf=buf=>{try{return new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){return new TextDecoder('windows-1252').decode(buf)}};
@@ -653,19 +912,19 @@ if(API){
     const q=$('sq').value.trim();if(q.length<2){$('sres').innerHTML='';status('smsg','');return}
     status('smsg','搜索中…',true);
     try{found=(await (await api('/tmdb',{q})).json()).results}catch(e){status('smsg',e.message);return}
-    status('smsg',found.length?'点一部电影，自动下载字幕并生成词表':'没有结果');
-    $('sres').innerHTML=found.map((m,i)=>`<button class="movie" data-i="${i}">${poster(m)}<div class="mbody"><div class="mtitle">${esc(m.title)}</div><div class="mmeta">${esc(m.year)}</div></div></button>`).join('');
+    status('smsg',found.length?'点一部电影，自动下载英文字幕并生成词表':'没有找到，换个英文片名试试');
+    $('sres').innerHTML=found.map((m,i)=>`<button class="pcard" data-i="${i}"><div class="cover">${cover(m)}</div><div class="pt">${esc(m.title)}</div><div class="pm">${esc(m.year)}</div></button>`).join('');
   },350)};
   $('sres').onclick=async e=>{
-    const b=e.target.closest('.movie');if(!b)return;
-    const m=found[b.dataset.i];status('smsg',`正在下载《${m.title}》的英文字幕并分析…`,true);
+    const b=e.target.closest('.pcard');if(!b||document.querySelector('#sres .loading'))return;
+    const m=found[b.dataset.i];b.classList.add('loading');status('smsg',`正在下载《${m.title}》的英文字幕并分析…`,true);
     try{const t=await fetchSrt(m);$('sq').value='';$('sres').innerHTML='';status('smsg','');await addMovie(m.title,m.year,t,m.poster)}
-    catch(e){status('smsg',e.message)}
+    catch(e){status('smsg',e.message);b.classList.remove('loading')}
   };
 }
 $('af').onchange=()=>{
-  const f=$('af').files[0];$('fname').textContent=f?.name||'.srt / .vtt';
-  if(f&&!$('at').value.trim()){const g=guessTitle(f.name);$('at').value=g.title;if(!$('ay').value)$('ay').value=g.year}
+  const f=$('af').files[0];$('fname').textContent=f?.name||'拖入字幕文件，或点击选择';$('upf').classList.toggle('hidden',!f);
+  if(f){const g=guessTitle(f.name);$('at').value=g.title;$('ay').value=g.year}
 };
 const dz=document.querySelector('.drop');
 dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};
@@ -674,59 +933,67 @@ dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.f
 $('go').onclick=async()=>{
   const f=$('af').files[0];if(!f||!$('at').value.trim()){status('msg','请选择字幕文件并填电影名');return}
   status('msg','分析中…',true);
-  try{await addMovie($('at').value.trim(),$('ay').value.trim(),decodeBuf(await f.arrayBuffer()));$('at').value=$('ay').value='';$('af').value='';$('fname').textContent='.srt / .vtt'}
+  try{await addMovie($('at').value.trim(),$('ay').value.trim(),decodeBuf(await f.arrayBuffer()));$('af').value='';$('af').onchange()}
   catch(e){status('msg','失败：'+e.message)}
 };
 
-/* ---------- library backup (movies + marks) ---------- */
-$('exp').onclick=async()=>download('movielingo-library.json',JSON.stringify({app:'movielingo',version:2,movies:await allMovies(),marks}),'application/json');
-$('imp').onclick=()=>$('impf').click();
+/* ---------- settings ---------- */
+const THEMES=[['auto','跟随系统'],['light','浅色'],['dark','深色']];
+function applyTheme(t){if(t=='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t}
+applyTheme(theme);
+function renderSettings(){
+  $('setin').innerHTML=`<div class="sheethead"><h2>设置</h2><button class="ib" data-close aria-label="关闭">${I('x')}</button></div>
+  <div class="srow col"><div><b>我的英语水平</b><p class="mut small">词表和学习默认只包含这个等级及以上的词</p></div>
+    <div class="chips">${LEVELS.map(l=>`<button class="chip ${lvc(l)}" data-mylv="${l}" aria-pressed="${myLevel==l}">${l} ${LVNAME[l]}</button>`).join('')}</div></div>
+  <div class="srow"><div><b>每日目标</b><p class="mut small">每天学习的单词数</p></div><div class="seg" data-set="goal">${[10,20,30,50].map(n=>`<button data-v="${n}" aria-pressed="${goal==n}">${n}</button>`).join('')}</div></div>
+  <div class="srow"><div><b>自动发音</b><p class="mut small">学习时自动读出单词</p></div><button class="switch" data-set="autosay" role="switch" aria-checked="${autosay}" aria-label="自动发音"><i></i></button></div>
+  <div class="srow"><div><b>外观</b></div><div class="seg" data-set="theme">${THEMES.map(([k,n])=>`<button data-v="${k}" aria-pressed="${theme==k}">${n}</button>`).join('')}</div></div>
+  <div class="srow col"><div><b>数据</b><p class="mut small">电影和学习记录只保存在这个浏览器里，换设备前先导出。</p></div>
+    <div class="actions"><button class="btn" id="exp">${I('download',16)}导出词库</button><button class="btn" id="imp">${I('upload',16)}导入词库</button>${installable()?`<button class="btn" id="inst">📲 安装到桌面</button>`:''}</div>
+    <p id="iomsg" class="mut small" role="status"></p></div>`;
+}
+$('setb').onclick=()=>{renderSettings();$('set').showModal()};
+$('set').addEventListener('click',async e=>{
+  if(e.target===$('set'))return $('set').close();
+  const b=e.target.closest('button');if(!b)return;
+  const grp=b.closest('[data-set]')?.dataset.set;
+  if(grp=='theme'){theme=b.dataset.v;store.set('theme',theme);applyTheme(theme);renderSettings()}
+  else if(grp=='goal'){goal=+b.dataset.v;store.set('goal',goal);renderSettings()}
+  else if(grp=='autosay'){autosay=!autosay;store.set('autosay',autosay);renderSettings()}
+  else if(b.id=='exp')download('movielingo-library.json',JSON.stringify({app:'movielingo',version:2,movies:await allMovies(),marks,days}),'application/json');
+  else if(b.id=='imp')$('impf').click();
+  else if(b.id=='inst')install();
+});
+$('set').addEventListener('close',rerender);
 $('impf').onchange=async()=>{
   const f=$('impf').files[0];if(!f)return;
   try{
     const d=JSON.parse(await f.text()),list=Array.isArray(d)?d:d.movies||[];let n=0;
     for(const m of list)if(m&&m.id&&Array.isArray(m.words)){await putMovie(m);n++}
     if(d.marks&&typeof d.marks=='object'){marks={...marks,...d.marks};store.set('marks',marks)}
-    await refresh();showList();status('iomsg',`已导入 ${n} 部电影`);
+    if(d.days&&typeof d.days=='object'){for(const k in d.days)days[k]=Math.max(days[k]||0,d.days[k]);store.set('days',days)}
+    await refresh();status('iomsg',`已导入 ${n} 部电影`);
   }catch(e){status('iomsg','导入失败：文件格式不对。')}
   $('impf').value='';
 };
 
-/* ---------- theme: follow system, or force light / dark ---------- */
-const THEMES={auto:['◐','跟随系统'],light:['☀','浅色'],dark:['☾','深色']};
-function applyTheme(t){
-  if(t=='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;
-  $('theme').textContent=THEMES[t][0];$('theme').title=$('theme').ariaLabel='主题：'+THEMES[t][1];
-}
-let theme=store.get('theme','auto');applyTheme(THEMES[theme]?theme:theme='auto');
-$('theme').onclick=()=>{const k=Object.keys(THEMES);theme=k[(k.indexOf(theme)+1)%k.length];store.set('theme',theme);applyTheme(theme)};
-
-/* ---------- installable app: offline cache, install button, update notice ---------- */
-function toast(text,action){
-  $('toastt').textContent=text;$('toasta').innerHTML='';if(action)$('toasta').append(action);
-  $('toast').classList.remove('hidden');
-}
-$('toastx').onclick=()=>$('toast').classList.add('hidden');
+/* ---------- installable app: offline cache, install, update notice ---------- */
 const syncOnline=()=>$('offline').classList.toggle('hidden',navigator.onLine);
 addEventListener('online',syncOnline);addEventListener('offline',syncOnline);syncOnline();
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){ // the standalone file opened from disk has no worker
   navigator.serviceWorker.register('sw.js').catch(()=>{});
-  navigator.serviceWorker.addEventListener('message',e=>{
-    if(e.data?.type!='updated')return;
-    const b=document.createElement('button');b.className='btn sm';b.textContent='刷新';b.onclick=()=>location.reload();
-    toast('MovieLingo 有新版本',b);
-  });
+  navigator.serviceWorker.addEventListener('message',e=>{if(e.data?.type=='updated')toast('MovieLingo 有新版本',actBtn('刷新',()=>location.reload()),0)});
 }
 const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1);
 let installEvt=null;
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('inst').classList.remove('hidden')});
-addEventListener('appinstalled',()=>{installEvt=null;$('inst').classList.add('hidden');toast('已安装，可以从桌面或主屏幕打开，没网也能用')});
-if(isIOS&&!standalone)$('inst').classList.remove('hidden'); // Safari has no install prompt: explain the manual way
-$('inst').onclick=async()=>{
-  if(installEvt){installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('inst').classList.add('hidden')}
-  else toast('在 Safari 里点底部的「分享」按钮，再选「添加到主屏幕」');
-};
+const installable=()=>!!installEvt||(isIOS&&!standalone);
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e});
+addEventListener('appinstalled',()=>{installEvt=null;toast('已安装，可以从桌面或主屏幕打开，没网也能用')});
+async function install(){
+  if(installEvt){installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('set').close()}
+  else status('iomsg','在 Safari 里点底部的「分享」按钮，再选「添加到主屏幕」');
+}
 
 (async()=>{db=await idb();await refresh();route()})();
 </script>
