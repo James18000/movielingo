@@ -1,0 +1,21 @@
+{
+  "name": "MovieLingo · 看电影前先学单词",
+  "short_name": "MovieLingo",
+  "description": "按 CEFR 难度分级的电影字幕词表，带时间码、原句和中文释义。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1015",
+  "theme_color": "#14161c",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "生词本", "url": "./#w", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+    {"name": "添加电影", "url": "./#add", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}
+  ]
+}
