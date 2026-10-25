@@ -311,6 +311,25 @@ dialog{color:var(--fg)}
 .done .stats span{font-size:13px;color:var(--mut)}
 .done .actions{justify-content:center;margin-top:8px}
 
+/* review quiz */
+.swipe.quiz{cursor:default}
+.qface{gap:16px}
+.qk{font-size:13px;color:var(--mut);font-weight:500;letter-spacing:.06em}
+.qline{font-size:17px;line-height:1.65;padding:14px 16px}
+.blank{display:inline-block;width:4.2em;height:1.1em;border-bottom:2.5px solid var(--sub-tc);margin:0 3px;vertical-align:-2px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;font-size:15px;font-weight:500;min-height:58px;line-height:1.35;transition:border-color .15s,background .15s,transform .12s}
+.opt:hover:not(:disabled){border-color:var(--faint)}
+.opt:active:not(:disabled){transform:scale(.97)}
+.opt:disabled{cursor:default}
+.opt kbd{font:500 11px var(--font-mono);color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:1px 6px;flex:none}
+@media (hover:none){.opt kbd{display:none}}
+.opt.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.opt.wrong{border-color:var(--no);background:color-mix(in srgb,var(--no) 12%,transparent);color:var(--no);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.qans{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;animation:fadein .2s ease}
+.duedot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;align-self:center}
+
 /* settings sheet */
 .sheet{border:0;padding:0;background:var(--surface);width:100%;max-width:520px;margin:auto auto 0;border-radius:24px 24px 0 0;max-height:92vh}
 .sheet[open]{animation:sheetin .3s cubic-bezier(.2,.8,.2,1)}
@@ -352,6 +371,7 @@ dialog{color:var(--fg)}
     <div class="mhead"><div class="cover" id="mcover"></div><div class="minfo"><h1 id="mt"></h1><p id="msub" class="mut small"></p><div id="mbar"></div></div></div>
     <div class="mprog"><div id="mring"></div><div><b id="mpct"></b><span id="mstat"></span></div></div>
     <button class="cta" id="learn"></button>
+    <p class="mut small center" id="learnhint" style="margin-top:10px"></p>
   </div>
   <div class="fbar">
     <div id="seg" class="seg" role="group" aria-label="按掌握程度筛选"></div>
@@ -520,9 +540,20 @@ function setLevel(l){
 /* ---------- marks: lemma -> 'k' (已掌握) | 's' (生词本), shared by every movie ---------- */
 let marks=store.get('marks',{});
 const mk=l=>marks[l]||'';
+/* spaced repetition for the 生词本: lemma -> {b: box, due: date}. Each correct review waits longer; passing the last box = 已掌握 */
+let srs=store.get('srs',{});
+const IV=[1,3,7,14,30];
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return day(d)};
+const isDue=l=>marks[l]=='s'&&(srs[l]?.due||'')<=day();
+function review(l,ok){
+  const b=srs[l]?.b||0;
+  if(ok&&b>=IV.length-1)return mark(l,'k',false);
+  srs[l]=ok?{b:b+1,due:addDays(IV[b+1])}:{b:0,due:addDays(1)};store.set('srs',srs);bump();
+}
 function mark(l,v,toggle=true){
   if(toggle&&marks[l]==v)delete marks[l];else{delete marks[l];marks[l]=v;bump()} // re-insert so the 生词本 lists newest first
-  store.set('marks',marks);
+  if(marks[l]!='s')delete srs[l];else if(!srs[l])srs[l]={b:0,due:day()};
+  store.set('marks',marks);store.set('srs',srs);
   document.querySelectorAll(`.wrow[data-l="${CSS.escape(l)}"]`).forEach(r=>{
     r.classList.toggle('st-k',marks[l]=='k');r.classList.toggle('st-s',marks[l]=='s');
     r.querySelectorAll('[data-mk]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mk==marks[l]));
@@ -557,11 +588,20 @@ let movies=[],cur=null,idx=new Map();const rowSrc=new Map();
 const levelsOf=m=>Object.fromEntries(LEVELS.map(l=>[l,m.words.filter(w=>w.level==l).length]));
 const knownOf=m=>m.words.filter(w=>marks[w.lemma]=='k').length;
 const savedOf=m=>m.words.filter(w=>marks[w.lemma]=='s').length;
+function comprehension(m){ // share of word occurrences you know: mastered, or below your level
+  const lo=myLevel?LEVELS.indexOf(myLevel):0;let all=0,ok=0;
+  for(const w of m.words){all+=w.count;if(marks[w.lemma]=='k'||LEVELS.indexOf(w.level)<lo)ok+=w.count}
+  return all?ok/all:0;
+}
 const lvbar=levels=>`<div class="lvbar" role="img" aria-label="难度分布">${LEVELS.filter(l=>levels[l]).map(l=>`<i class="${lvc(l)}" style="flex:${levels[l]}" title="${l} · ${levels[l]}"></i>`).join('')}</div>`;
 const hue=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))%360;return h};
 const cover=m=>m.poster?`<img src="${esc(m.poster)}" alt="" loading="lazy">`:`<div class="gen" style="--h:${hue(m.title)}"><small>${esc(m.year||'MOVIE')}</small>${esc(m.title)}</div>`;
 const ring=(p,label,sub='',sz=64)=>`<div class="ring" style="--p:${Math.min(p,1)};--sz:${sz}px"><span>${label}${sub?`<small>${sub}</small>`:''}</span></div>`;
-const short=zh=>(zh||'').split(/[；;，,]/)[0].trim();
+const short=zh=>{ // up to 3 senses: the dictionary's first sense alone is often not the common one (reckless -> 不介意的)
+  const p=(zh||'').split(/[；;]/).map(s=>s.trim()).filter(Boolean);let out=p[0]||'';
+  for(const s of p.slice(1)){if((out+'；'+s).length>14)break;out+='；'+s}
+  return out;
+};
 const hl=(sentence,form)=>{
   const m=sentence.match(new RegExp('\\b'+escRe(form)+'\\b','i'));
   return m?esc(sentence.slice(0,m.index))+`<span class="hit">${esc(m[0])}</span>`+esc(sentence.slice(m.index+m[0].length)):esc(sentence);
@@ -573,7 +613,7 @@ function wordRow(w,mv,open=false){
   rowSrc.set(w.lemma,{w,mv});
   const s=mk(w.lemma);
   return `<div class="wrow ${lvc(w.level)}${s?' st-'+s:''}${open?' open':''}" data-l="${esc(w.lemma)}">
-    <button class="wmain" aria-expanded="${open}"><span class="lvt">${w.level}</span><span class="ww">${esc(w.lemma)}</span><span class="wz">${esc(short(w.zh)||w.definition)}</span></button>
+    <button class="wmain" aria-expanded="${open}"><span class="lvt">${w.level}</span><span class="ww">${esc(w.lemma)}</span>${s=='s'&&isDue(w.lemma)?'<span class="duedot" title="今天该复习"></span>':''}<span class="wz">${esc(short(w.zh)||w.definition)}</span></button>
     <button class="ib mk star" data-mk="s" aria-pressed="${s=='s'}" aria-label="加入生词本" title="加入生词本">${I('star')}</button>
     <button class="ib mk ok" data-mk="k" aria-pressed="${s=='k'}" aria-label="标记为已掌握" title="已掌握">${I('check')}</button>
     ${open?wordDetail(w,mv):''}</div>`;
@@ -625,7 +665,7 @@ function onMark(b){
   if((inMovie&&!stOk(l))||(inBook&&now!='s')){
     collapse(row);
     toast(now=='k'?`「${l}」已掌握`:now=='s'?`「${l}」已加入生词本`:`已取消「${l}」的标记`,
-      actBtn('撤销',()=>{delete marks[l];if(before)marks[l]=before;store.set('marks',marks);rerender()}),4000);
+      actBtn('撤销',()=>{delete marks[l];if(before)marks[l]=before;if(before=='s'&&!srs[l])srs[l]={b:0,due:day()};store.set('marks',marks);store.set('srs',srs);rerender()}),4000);
   }else if(now=='s')toast(`「${l}」已加入生词本`,null,1600);
 }
 
@@ -692,15 +732,15 @@ async function refresh(){
   idx=new Map();
   for(const m of movies)for(const w of m.words){if(!idx.has(w.lemma))idx.set(w.lemma,[]);idx.get(w.lemma).push({m,w})}
 }
-const pcard=m=>{const n=m.words.length,k=knownOf(m),p=n?k/n:0;
-  return `<a class="pcard" href="#m/${encodeURIComponent(m.id)}"><div class="cover">${cover(m)}</div><div class="pb"><i style="width:${p*100}%"></i></div><div class="pt">${esc(m.title)}</div><div class="pm">${n} 个词${k?` · 已掌握 ${Math.round(p*100)}%`:''}</div></a>`};
+const pcard=m=>{const c=comprehension(m);
+  return `<a class="pcard" href="#m/${encodeURIComponent(m.id)}"><div class="cover">${cover(m)}</div><div class="pb"><i style="width:${c*100}%"></i></div><div class="pt">${esc(m.title)}</div><div class="pm">${m.words.length} 个词 · 理解度 ${Math.round(c*100)}%</div></a>`};
 function renderHome(){
   if(!movies.length){$('home').innerHTML=welcome();return}
-  const t=today(),s=streak(),last=movies.find(m=>m.id==store.get('last'))||movies[0],d=deckFor(last).length;
+  const t=today(),s=streak(),last=movies.find(m=>m.id==store.get('last'))||movies[0],d=deckFor(last).length,due=dueEntries().length;
   $('home').innerHTML=`<section class="today card">${ring(t/goal,t,'/ '+goal)}
     <div><h2>${t>=goal?'今日目标完成':'今天'}</h2><p>${s?`<span class="fl">${I('flame',16)}连续 ${s} 天</span> · `:''}${t>=goal?'明天继续保持':t?`还差 ${goal-t} 个完成今日目标`:'每天学一点，看电影时就能听懂更多'}</p>
-    ${d?`<p style="margin-top:2px">下一组：《${esc(last.title)}》</p>`:''}</div>
-    ${d?`<button class="btn pri lg" data-study="${esc(last.id)}">${I('play',16)}继续学习</button>`:''}</section>
+    ${due?`<p style="margin-top:2px">有 <b style="color:var(--accent)">${due}</b> 个生词今天该复习了</p>`:d?`<p style="margin-top:2px">下一组：《${esc(last.title)}》</p>`:''}</div>
+    ${due?`<button class="btn pri lg" data-study="review">${I('play',16)}复习生词</button>`:d?`<button class="btn pri lg" data-study="${esc(last.id)}">${I('play',16)}继续学习</button>`:''}</section>
     <div class="sechead"><h2>我的电影</h2><a class="linkbtn" href="#add">${I('plus',16)}添加</a></div>
     <div class="posters">${movies.map(pcard).join('')}</div>`;
 }
@@ -745,13 +785,14 @@ function renderFilters(){
   $('seg').innerHTML=SEGS.map(([k,n])=>`<button data-st="${k}" aria-pressed="${view.st==k}">${n}<b>${cnt[k]}</b></button>`).join('');
   const lc=Object.fromEntries(LEVELS.map(l=>[l,0]));for(const w of cur.words)if(stOk(w.lemma))lc[w.level]++;
   $('lv').innerHTML=LEVELS.map(l=>`<button class="chip ${lvc(l)}" aria-pressed="${sel.has(l)}" data-lv="${l}">${l}<b>${lc[l]}</b></button>`).join('')+(sel.size?'<button class="linkbtn" data-lv="">全部等级</button>':'');
-  const n=cur.words.length,k=knownOf(cur),s=savedOf(cur),p=n?k/n:0;
-  $('mring').innerHTML=ring(p,Math.round(p*100)+'%','',58);
-  $('mpct').textContent=k?`已掌握 ${k} / ${n} 个词`:`共 ${n} 个词`;
-  $('mstat').textContent=s?`生词本里有 ${s} 个`:k?'继续加油':'先学一组，看看你认识多少';
+  const n=cur.words.length,k=knownOf(cur),s=savedOf(cur),c=comprehension(cur);
+  $('mring').innerHTML=ring(c,Math.round(c*100)+'%','',58);
+  $('mpct').textContent=`能看懂约 ${Math.round(c*100)}% 的台词用词`;
+  $('mstat').textContent=`已掌握 ${k} / ${n} 个词${s?` · 生词本 ${s} 个`:''}`;
   const d=deckFor(cur).length;
   $('learn').disabled=!d;
-  $('learn').innerHTML=d?`${I('play',18)}开始学习<span>· ${Math.min(d,sessionSize())} 个词</span>`:'这个难度的词你都掌握了 🎉';
+  $('learn').innerHTML=d?`${I('play',18)}开始学习<span>· ${Math.min(d,sessionSize())} 个词</span>`:s?'生词按计划复习中，明天再来':'这个难度的词你都掌握了 🎉';
+  $('learnhint').textContent=d?'先学片中出现次数最多的生词，看电影时最有用':'';
 }
 function renderWords(){
   const ws=filtered(),e=view.q?['🔍',`没有找到「${esc(view.q)}」`,'换个拼写，或者清空搜索。']:EMPTY[view.st];
@@ -783,27 +824,34 @@ $('csv').onclick=()=>{$('menu').open=false;download(`${cur.title} 词表.csv`,cs
 
 /* ---------- study session: flip cards, swipe right = 认识, left = 不认识 ---------- */
 const sessionSize=()=>Math.min(goal,20);
-function deckFor(m){ // saved words first, then the rest of what you still have to learn, at your levels
+function deckFor(m){ // saved words that are due, then new words you will hear most often in this film
   if(!m)return[];
   const ws=m.words.filter(w=>(!sel.size||sel.has(w.level))&&mk(w.lemma)!='k');
-  return[...ws.filter(w=>mk(w.lemma)=='s'),...ws.filter(w=>mk(w.lemma)!='s')];
+  return[...ws.filter(w=>isDue(w.lemma)),...ws.filter(w=>!mk(w.lemma)).sort((a,b)=>b.count-a.count||b.zipf-a.zipf)];
 }
 const bookEntries=()=>Object.keys(marks).filter(l=>marks[l]=='s'&&has(l)).reverse().map(entryFor);
-let deck=[],di=0,flipped=false,tally,source=null,busy=false;
+const dueEntries=()=>bookEntries().filter(e=>isDue(e.lemma));
+const deckOf=src=>src=='review'?dueEntries():src=='book'?bookEntries():deckFor(movies.find(m=>m.id==src));
+const quizMode=()=>source=='review'||source=='book';
+let deck=[],di=0,flipped=false,tally,source=null,busy=false,answered=false;
 function study(src){
   source=src;
-  const all=src=='book'?bookEntries():deckFor(movies.find(m=>m.id==src));
-  if(!all.length)return toast('没有需要学习的词了 🎉');
+  const all=deckOf(src);
+  if(!all.length)return toast(src=='review'?'今天没有要复习的生词 🎉':'没有需要学习的词了 🎉');
   deck=all.slice(0,sessionSize());di=0;tally={k:0,s:0};
   if(!$('study').open)$('study').showModal();
   renderCard();
 }
 function renderCard(){
-  const w=deck[di];busy=false;flipped=false;
+  const w=deck[di];busy=false;flipped=false;answered=false;
   $('sp').style.width=di/deck.length*100+'%';$('sn').textContent=w?`${di+1} / ${deck.length}`:'';
   if(!w)return summary();
-  $('sact').classList.remove('hidden');$('keys').classList.remove('hidden');
   const x=w.occurrences?.[0],line=x?strip(x):'';
+  if(quizMode()){ // reviews are active recall: alternate a cloze on the film line with picking the meaning
+    const kind=x&&di%2==0?'cloze':'mean',opts=options(w,kind);
+    if(opts)return renderQuiz(w,x,kind,opts);
+  }
+  $('sact').classList.remove('hidden');$('keys').classList.remove('hidden');$('keys').textContent='← 不认识　·　空格 翻面　·　认识 →';
   $('stage').innerHTML=`<div class="swipe" id="sw"><div class="card3d" id="c3">
     <div class="face front ${lvc(w.level)}"><span class="pill">${w.level} ${LVNAME[w.level]}</span><h2 class="sword">${esc(w.lemma)}</h2>${sayBtn(w.lemma,'朗读单词')}${line}<p class="hint">点击卡片查看释义</p></div>
     <div class="face back ${lvc(w.level)}"><div class="bw"><b>${esc(w.lemma)}</b>${sayBtn(w.lemma,'朗读单词')}</div>${w.zh?`<p class="szh">${esc(w.zh)}</p>`:''}<p class="sen">${esc(w.definition)}</p>${line}</div>
@@ -811,10 +859,48 @@ function renderCard(){
   bindSwipe($('sw'));
   if(autosay)say(w.lemma);
 }
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function options(w,kind){ // the answer plus 3 distractors of similar difficulty from your own films, or null
+  const label=l=>kind=='mean'?short(LEX[l][2]):l,mine=label(w.lemma);
+  if(!mine)return null;
+  const lv=LEX[w.lemma][0],seen=new Set([mine]),out=[];
+  const pool=shuffle([...idx.keys()].filter(l=>l!=w.lemma&&has(l))).sort((a,b)=>Math.abs(LEX[a][0]-lv)-Math.abs(LEX[b][0]-lv));
+  for(const l of pool){const t=label(l);if(t&&!seen.has(t)){seen.add(t);out.push(l);if(out.length==3)break}}
+  return out.length<3?null:shuffle([w.lemma,...out]);
+}
+function blank(sentence,form){
+  const m=sentence.match(new RegExp('\\b'+escRe(form)+'\\b','i'));
+  return m?esc(sentence.slice(0,m.index))+'<span class="blank"></span>'+esc(sentence.slice(m.index+m[0].length)):esc(sentence);
+}
+function renderQuiz(w,x,kind,opts){
+  $('sact').classList.add('hidden');$('keys').classList.remove('hidden');$('keys').textContent='按 1–4 选择　·　回车 继续';
+  const zh=LEX[w.lemma][2]||w.zh;
+  const q=kind=='cloze'
+    ?`<p class="qk">台词填空</p><div class="sub qline"><span class="tc">${x.t}</span><span class="line">${x.m?`<span class="from">《${esc(x.m)}》</span>`:''}${blank(x.sentence,x.form)}</span></div>`
+    :`<p class="qk">选出正确的意思</p><h2 class="sword">${esc(w.lemma)}</h2>${sayBtn(w.lemma,'朗读单词')}`;
+  $('stage').innerHTML=`<div class="swipe quiz" id="sw"><div class="face qface ${lvc(w.level)}">${q}
+    <div class="opts">${opts.map((l,i)=>`<button class="opt" data-o="${esc(l)}"><kbd>${i+1}</kbd><span>${esc(kind=='mean'?short(LEX[l][2]):l)}</span></button>`).join('')}</div>
+    <div class="qans hidden" id="qans"><div class="bw"><b>${esc(w.lemma)}</b>${sayBtn(w.lemma,'朗读单词')}</div><p class="szh">${esc(zh)}</p>${kind=='mean'&&x?strip(x):''}
+      <button class="btn pri lg hidden" id="qnext">继续</button></div></div></div>`;
+  $('sw').querySelector('.opts').onclick=e=>{const b=e.target.closest('.opt');if(b)choose(b)};
+  $('qnext').onclick=()=>grade('s');
+  if(autosay&&kind=='mean')say(w.lemma);
+}
+function choose(btn){
+  const w=deck[di];if(answered||!w)return;answered=true;
+  const ok=btn.dataset.o==w.lemma;
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.o==w.lemma)b.classList.add('right')});
+  if(!ok)btn.classList.add('wrong');
+  $('qans').classList.remove('hidden');
+  if(autosay)say(w.lemma);
+  if(ok)setTimeout(()=>grade('k'),1200);else $('qnext').classList.remove('hidden');
+}
 function flip(){if(!deck[di])return;flipped=!flipped;$('c3').classList.toggle('flipped',flipped)}
 function grade(v){
   const w=deck[di];if(!w||busy)return;busy=true;
-  mark(w.lemma,v,false);tally[v]++;
+  if(quizMode())review(w.lemma,v=='k');
+  else{mark(w.lemma,v,false);if(v=='s'){srs[w.lemma]={b:0,due:addDays(1)};store.set('srs',srs)}} // just seen it: first review tomorrow
+  tally[v]++;
   const sw=$('sw'),dir=v=='k'?1:-1;
   sw.style.transition='transform .28s ease-in,opacity .28s';sw.style.transform=`translateX(${dir*130}%) rotate(${dir*14}deg)`;sw.style.opacity='0';
   setTimeout(()=>{di++;renderCard()},240);
@@ -832,10 +918,10 @@ function bindSwipe(el){
 }
 function summary(){
   $('sact').classList.add('hidden');$('keys').classList.add('hidden');
-  const more=(source=='book'?bookEntries():deckFor(movies.find(m=>m.id==source))).length,t=today(),s=streak();
-  $('stage').innerHTML=`<div class="done"><div class="donebadge">${I('check',44)}</div><h2>这一组完成了</h2>
+  const more=deckOf(source).length,t=today(),s=streak(),q=quizMode();
+  $('stage').innerHTML=`<div class="done"><div class="donebadge">${I('check',44)}</div><h2>${q?'复习完成':'这一组完成了'}</h2>
     <p class="mut">${t>=goal?'今日目标已完成 🎉':`今天已学 ${t} 个，目标 ${goal} 个`}${s?` · 连续 ${s} 天`:''}</p>
-    <div class="stats"><div><b style="color:var(--ok)">${tally.k}</b><span>认识</span></div><div><b style="color:var(--accent)">${tally.s}</b><span>加入生词本</span></div></div>
+    <div class="stats"><div><b style="color:var(--ok)">${tally.k}</b><span>${q?'答对，推迟复习':'认识'}</span></div><div><b style="color:var(--accent)">${tally.s}</b><span>${q?'答错，明天再练':'加入生词本'}</span></div></div>
     <div class="actions">${more?`<button class="btn pri lg" id="again">再学一组</button>`:''}<button class="btn lg" id="fin">完成</button></div></div>`;
   if(more)$('again').onclick=()=>study(source);
   $('fin').onclick=()=>$('study').close();
@@ -843,6 +929,12 @@ function summary(){
 $('sno').onclick=()=>grade('s');$('syes').onclick=()=>grade('k');$('sx').onclick=()=>$('study').close();
 $('study').addEventListener('keydown',e=>{
   if(!deck[di])return;
+  if($('sw')?.classList.contains('quiz')){
+    const o=document.querySelectorAll('.opt')[+e.key-1];
+    if(o){e.preventDefault();choose(o)}
+    else if(e.key=='Enter'&&!$('qnext').classList.contains('hidden')){e.preventDefault();grade('s')}
+    return;
+  }
   if(e.key==' '){e.preventDefault();flip()}
   else if(e.key=='ArrowLeft'||e.key=='1')grade('s');
   else if(e.key=='ArrowRight'||e.key=='2')grade('k');
@@ -862,8 +954,9 @@ function renderWordTab(){
   history.replaceState(null,'','#w'+(q?'/'+encodeURIComponent(q):''));
   if(!q){
     const ls=bookEntries();
-    $('whead').innerHTML=`<div class="bookhead"><div><h2>生词本</h2><p class="mut small">${ls.length?`${ls.length} 个词，学会了就点勾`:'收集你还不认识的词'}</p></div>
-      ${ls.length?`<div class="actions"><button class="ib" id="wcsv" aria-label="导出生词本 CSV" title="导出 CSV">${I('download')}</button><button class="btn pri" data-study="book">${I('play',15)}复习</button></div>`:''}</div>`;
+    const due=ls.filter(e=>isDue(e.lemma)).length;
+    $('whead').innerHTML=`<div class="bookhead"><div><h2>生词本</h2><p class="mut small">${ls.length?`${ls.length} 个词 · ${due?`${due} 个今天该复习`:'今天的复习已完成'}`:'收集你还不认识的词'}</p></div>
+      ${ls.length?`<div class="actions"><button class="ib" id="wcsv" aria-label="导出生词本 CSV" title="导出 CSV">${I('download')}</button>${due?`<button class="btn pri" data-study="review">${I('play',15)}复习 ${due}</button>`:`<button class="btn" data-study="book">提前复习</button>`}</div>`:''}</div>`;
     if(ls.length)$('wcsv').onclick=()=>download('MovieLingo 生词本.csv',csv(wordRows(ls)),'text/csv');
     $('sugg').innerHTML='';
     lazyList($('wres'),ls,w=>wordRow(w),emptyBox('⭐','生词本是空的','在词表里点星星，或学习时选「不认识」，词就会收集到这里。'));
@@ -966,7 +1059,7 @@ $('set').addEventListener('click',async e=>{
   if(grp=='theme'){theme=b.dataset.v;store.set('theme',theme);applyTheme(theme);renderSettings()}
   else if(grp=='goal'){goal=+b.dataset.v;store.set('goal',goal);renderSettings()}
   else if(grp=='autosay'){autosay=!autosay;store.set('autosay',autosay);renderSettings()}
-  else if(b.id=='exp')download('movielingo-library.json',JSON.stringify({app:'movielingo',version:2,movies:await allMovies(),marks,days}),'application/json');
+  else if(b.id=='exp')download('movielingo-library.json',JSON.stringify({app:'movielingo',version:2,movies:await allMovies(),marks,days,srs}),'application/json');
   else if(b.id=='imp')$('impf').click();
   else if(b.id=='inst')install();
 });
@@ -977,6 +1070,7 @@ $('impf').onchange=async()=>{
     const d=JSON.parse(await f.text()),list=Array.isArray(d)?d:d.movies||[];let n=0;
     for(const m of list)if(m&&m.id&&Array.isArray(m.words)){await putMovie(m);n++}
     if(d.marks&&typeof d.marks=='object'){marks={...marks,...d.marks};store.set('marks',marks)}
+    if(d.srs&&typeof d.srs=='object'){srs={...srs,...d.srs};store.set('srs',srs)}
     if(d.days&&typeof d.days=='object'){for(const k in d.days)days[k]=Math.max(days[k]||0,d.days[k]);store.set('days',days)}
     await refresh();status('iomsg',`已导入 ${n} 部电影`);
   }catch(e){status('iomsg','导入失败：文件格式不对。')}
