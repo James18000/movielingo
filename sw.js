@@ -2,13 +2,13 @@
 // The page (7 MB, includes the dictionary) is served from cache straight away and refreshed in the background;
 // when a newer page arrives the open tabs are told, so they can offer a reload.
 // Bump VERSION only when this file's caching logic changes; page updates do not need it.
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = `movielingo-shell-${VERSION}`;
 const IMG = `movielingo-img-${VERSION}`;
 const PAGE = "./";
 const ASSETS = ["manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/icon.svg"];
 const CDN = ["https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"];
-const FONTS = /^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
+const FONTS = /^https:\/\/(fonts\.(googleapis|gstatic)\.com\/|cdn\.jsdelivr\.net\/npm\/lxgw-wenkai)/;
 const POSTERS = /^https:\/\/image\.tmdb\.org\//;
 const MAX_POSTERS = 300;
 
